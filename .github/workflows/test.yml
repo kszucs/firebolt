@@ -1,0 +1,23 @@
+name: Firebolt Test
+
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Mojo
+      uses: kszucs/setup-mojo@main
+      with:
+        version: '2024.7.1805'
+    - name: Verify Mojo installation
+      run: |
+        mojo --version
+        echo "Modular Home: $MODULAR_HOME"
+    - name: Install PyArrow
+      run: |
+        pip install pyarrow
+    - name: Test Firebolt
+      run: |
+        mojo test firebolt -I .
