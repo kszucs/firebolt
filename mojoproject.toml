@@ -11,3 +11,6 @@ fmt = "mojo format firebolt"
 
 [dependencies]
 max = "*"
+
+[pypi-dependencies]
+pyarrow = ">=19.0.1, <20"

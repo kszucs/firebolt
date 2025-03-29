@@ -124,8 +124,6 @@ A couple of notable limitations:
 
 6. No `ChunkedArray`s, `RecordBatch`es, `Table`s are implemented yet, but soon they will be.
 
-7. No CI has been set up yet, but it is going to be in focus really soon.
-
 ## Development
 
 I shared the implementation it its current state so others can join the effort.
@@ -136,11 +134,9 @@ The tests can be run with:
 
 ```bash
 magic run test
-```
-
-Tested with nightly `Mojo`:
 
 ```bash
+
 ## References
 
 - [Another effort to implement Arrow in Mojo](https://github.com/mojo-data/arrow.mojo)

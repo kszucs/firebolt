@@ -57,7 +57,7 @@ def test_bitmap():
     assert_equal(b.length[DType.bool](), 64 * 8)
 
     b.unsafe_set(0, True)
-    assert_true(b.unsafe_get(0))
-    assert_false(b.unsafe_get(1))
+    assert_true(b.unsafe_get[DType.bool](0))
+    assert_false(b.unsafe_get[DType.bool](1))
     b.unsafe_set(1, True)
-    assert_true(b.unsafe_get(1))
+    assert_true(b.unsafe_get[DType.bool](1))
