@@ -131,20 +131,16 @@ A couple of notable limitations:
 I shared the implementation it its current state so others can join the effort.
 If the project manages to evolve, ideally it should be donated to the upstream Apache Arrow project.
 
-Given an existing Mojo installation the tests can be run with:
+Please install magic by following the instructions in the [documentation](https://docs.modular.com/magic/).
+The tests can be run with:
 
 ```bash
-cd firebolt
-mojo test firebolt -I .
+magic run test
 ```
 
 Tested with nightly `Mojo`:
 
 ```bash
-$ mojo --version
-mojo 2024.7.1805 (0a697965)
-```
-
 ## References
 
 - [Another effort to implement Arrow in Mojo](https://github.com/mojo-data/arrow.mojo)

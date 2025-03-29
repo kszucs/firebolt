@@ -1,3 +1,4 @@
+from memory import ArcPointer
 from .primitive import *
 
 
@@ -10,9 +11,9 @@ trait Array(Movable, Sized):
 struct ArrayData(Movable):
     var dtype: DataType
     var length: Int
-    var bitmap: Arc[Buffer]
-    var buffers: List[Arc[Buffer]]
-    var children: List[Arc[ArrayData]]
+    var bitmap: ArcPointer[Buffer]
+    var buffers: List[ArcPointer[Buffer]]
+    var children: List[ArcPointer[ArrayData]]
 
     fn is_valid(self, index: Int) -> Bool:
         return self.bitmap[].unsafe_get[DType.bool](index)
@@ -62,7 +63,7 @@ struct ChunkedArray:
     var length: Int
     var chunks: List[ArrayData]
 
-    fn __init__(inout self, dtype: DataType, chunks: List[ArrayData]):
+    fn __init__(inoutself, dtype: DataType, chunks: List[ArrayData]):
         self.dtype = dtype
         self.chunks = chunks
         self.length = 0

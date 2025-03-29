@@ -1,0 +1,13 @@
+[project]
+authors = ["Krisztián Szűcs"]
+channels = ["https://conda.modular.com/max-nightly", "https://conda.modular.com/max", "https://repo.prefix.dev/modular-community", "conda-forge"]
+name = "firebolt"
+platforms = ["osx-arm64", "linux-64"]
+version = "0.1.0"
+
+[tasks]
+test = "mojo test firebolt -I ."
+fmt = "mojo format firebolt"
+
+[dependencies]
+max = "*"

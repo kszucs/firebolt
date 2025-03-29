@@ -1,16 +1,19 @@
+from memory import ArcPointer
 from ..buffers import Buffer
 from ..dtypes import *
 
 
 struct PrimitiveArray[T: DataType](Array):
+    """An Arrow array of primitive types."""
+
     alias dtype = T
     alias scalar = Scalar[T.native]
     var data: ArrayData
-    var bitmap: Arc[Buffer]
-    var buffer: Arc[Buffer]
+    var bitmap: ArcPointer[Buffer]
+    var buffer: ArcPointer[Buffer]
     var capacity: Int
 
-    fn __init__(inout self, data: ArrayData) raises:
+    fn __init__(mut self, data: ArrayData) raises:
         # TODO(kszucs): put a dtype constraint here
         if data.dtype != T:
             raise Error("Unexpected dtype")
@@ -22,7 +25,7 @@ struct PrimitiveArray[T: DataType](Array):
         self.buffer = data.buffers[0]
         self.capacity = data.length
 
-    fn __init__(inout self, capacity: Int = 0):
+    fn __init__(mut self, capacity: Int = 0):
         self.capacity = capacity
         self.bitmap = Buffer.alloc[DType.bool](capacity)
         self.buffer = Buffer.alloc[T.native](capacity)
@@ -31,10 +34,10 @@ struct PrimitiveArray[T: DataType](Array):
             length=0,
             bitmap=self.bitmap,
             buffers=List(self.buffer),
-            children=List[Arc[ArrayData]](),
+            children=List[ArcPointer[ArrayData]](),
         )
 
-    fn __moveinit__(inout self, owned existing: Self):
+    fn __moveinit__(mut self, owned existing: Self):
         self.data = existing.data^
         self.bitmap = existing.bitmap^
         self.buffer = existing.buffer^
@@ -43,7 +46,7 @@ struct PrimitiveArray[T: DataType](Array):
     fn as_data(self) -> ArrayData:
         return self.data
 
-    fn grow(inout self, capacity: Int):
+    fn grow(mut self, capacity: Int):
         self.bitmap[].grow[DType.bool](capacity)
         self.buffer[].grow[T.native](capacity)
         self.capacity = capacity
@@ -61,27 +64,27 @@ struct PrimitiveArray[T: DataType](Array):
         return self.buffer[].unsafe_get[T.native](index)
 
     @always_inline
-    fn unsafe_set(inout self, index: Int, value: Self.scalar):
+    fn unsafe_set(mut self, index: Int, value: Self.scalar):
         self.bitmap[].unsafe_set[DType.bool](index, True)
         self.buffer[].unsafe_set[T.native](index, value)
 
     @always_inline
-    fn unsafe_append(inout self, value: Self.scalar):
+    fn unsafe_append(mut self, value: Self.scalar):
         self.unsafe_set(self.data.length, value)
         self.data.length += 1
 
-    fn append(inout self, value: Self.scalar):
+    fn append(mut self, value: Self.scalar):
         if self.data.length >= self.capacity:
             self.grow(self.capacity * 2)
         self.unsafe_append(value)
 
-    # fn append(inout self, value: Optional[Self.scalar]):
+    # fn append(mut self, value: Optional[Self.scalar]):
 
-    fn extend(inout self, values: List[Bool]):
-        if self.length + len(values) >= self.capacity:
+    fn extend(mut self, values: List[self.scalar]):
+        if self.__len__() + len(values) >= self.capacity:
             self.grow(self.capacity + len(values))
         for value in values:
-            self.unsafe_append(value)
+            self.unsafe_append(value[])
 
 
 alias BoolArray = PrimitiveArray[bool_]
@@ -93,3 +96,8 @@ alias UInt8Array = PrimitiveArray[uint8]
 alias UInt16Array = PrimitiveArray[uint16]
 alias UInt32Array = PrimitiveArray[uint32]
 alias UInt64Array = PrimitiveArray[uint64]
+
+
+fn as_bool_array_scalar(value: Bool) -> BoolArray.scalar:
+    """Bool conversion function."""
+    return BoolArray.scalar(Scalar[DType.bool](value))

@@ -106,7 +106,7 @@ alias MAP = 30
 alias EXTENSION = 31
 
 # Fixed size list of some logical type
-alias FIXED_SIZE_LIST = 32,
+alias FIXED_SIZE_LIST = 32
 
 # Measure of elapsed time in either seconds, milliseconds, microseconds
 # or nanoseconds.
@@ -148,7 +148,7 @@ struct Field(CollectionElement, EqualityComparable):
     var nullable: Bool
 
     fn __init__(
-        inout self, name: String, dtype: DataType, nullable: Bool = False
+        mut self, name: String, dtype: DataType, nullable: Bool = False
     ):
         self.name = name
         self.dtype = dtype
@@ -170,12 +170,12 @@ struct DataType(CollectionElement, EqualityComparable, Stringable):
     var native: DType
     var fields: List[Field]
 
-    fn __init__(inout self, *, code: UInt8):
+    fn __init__(mut self, *, code: UInt8):
         self.code = code
         self.native = DType.invalid
         self.fields = List[Field]()
 
-    fn __init__(inout self, native: DType):
+    fn __init__(mut self, native: DType):
         if native is DType.bool:
             self.code = BOOL
         elif native is DType.int8:
@@ -203,22 +203,22 @@ struct DataType(CollectionElement, EqualityComparable, Stringable):
         self.native = native
         self.fields = List[Field]()
 
-    fn __init__(inout self, *, code: UInt8, native: DType):
+    fn __init__(mut self, *, code: UInt8, native: DType):
         self.code = code
         self.native = native
         self.fields = List[Field]()
 
-    fn __init__(inout self, *, code: UInt8, fields: List[Field]):
+    fn __init__(mut self, *, code: UInt8, fields: List[Field]):
         self.code = code
         self.native = DType.invalid
         self.fields = fields
 
-    fn __copyinit__(inout self, value: Self):
+    fn __copyinit__(mut self, value: Self):
         self.code = value.code
         self.native = value.native
         self.fields = value.fields
 
-    fn __moveinit__(inout self, owned value: Self):
+    fn __moveinit__(mut self, owned value: Self):
         self.code = value.code
         self.native = value.native
         self.fields = value.fields^
@@ -289,7 +289,7 @@ struct DataType(CollectionElement, EqualityComparable, Stringable):
 
     @always_inline
     fn is_fixed_size(self) -> Bool:
-        return self.bitwidth > 0
+        return self.bitwidth() > 0
 
     @always_inline
     fn is_integer(self) -> Bool:
