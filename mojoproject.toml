@@ -15,3 +15,4 @@ max = "*"
 [pypi-dependencies]
 pyarrow = ">=19.0.1, <20"
 ruff = ">=0.11.2, <0.12"
+mojo-arrow-sys = ">=0.1.0, <0.2"

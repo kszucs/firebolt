@@ -4,9 +4,9 @@ import os
 import pyarrow as pa
 from pyarrow import parquet
 
+def create_test_table() -> pa.Table:
+    """Create a test table with various data types for testing."""
 
-def create_test_parquet(output_path="test_data.parquet"):
-    """Create a parquet file with various data types for testing."""
     # Primitive types
     int_values = pa.array([1, 2, 3, 4, 5], type=pa.int32())
     float_values = pa.array([1.1, 2.2, 3.3, 4.4, 5.5], type=pa.float32())
@@ -62,6 +62,9 @@ def create_test_parquet(output_path="test_data.parquet"):
             "list_struct_col": list_struct_values,
         }
     )
+def create_test_parquet(output_path="test_data.parquet"):
+    """Create a parquet file with various data types for testing."""
+    table = create_test_table()
 
     # Write to parquet file
     parquet.write_table(table, output_path)

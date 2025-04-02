@@ -133,6 +133,40 @@ def test_list_array_from_pyarrow():
     )
 
 
+def test_parquet_file():
+    # open the test parquet file
+    var pq = Python.import_module("pyarrow.parquet")
+
+    var table = pq.read_table("test_data/test_file.parquet")
+    var array_stream = ArrowArrayStream.from_pyarrow(table)
+    var c_schema = array_stream.c_schema()
+    var schema = c_schema.to_dtype()
+    assert_equal(len(schema.fields), 9)
+    var expected_field_names = List[StringLiteral](
+        "int_col",
+        "float_col",
+        "str_col",
+        "bool_col",
+        "list_int_col",
+        "list_float_col",
+        "list_str_col",
+        "struct_col",
+        "list_struct_col",
+    )
+    assert_equal(len(schema.fields), len(expected_field_names))
+    for field_index in range(len(expected_field_names)):
+        field = schema.fields[field_index]
+        expected_name = expected_field_names[field_index]
+        assert_equal(field.name, expected_name)
+
+    var c_next = array_stream.c_next()
+    assert_equal(c_next.length, 5)
+    var array_data = c_next.to_array(schema)
+    assert_true(array_data.is_valid(0))
+    assert_false(array_data.is_valid(5))
+    assert_equal(len(array_data.children), 0)
+
+
 # def test_schema_to_pyarrow():
 #     var pa = Python.import_module("pyarrow")
 
