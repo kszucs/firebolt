@@ -5,24 +5,21 @@ on: [push]
 jobs:
   test:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
     env:
       MODULAR_HOME: "/home/runner/.modular"
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v2
-      - name: Install magic
-        run: |
-          curl -ssL https://magic.modular.com/6b3752cd-debc-45dd-b249-5d4941e1c18c | bash
-          echo "/home/runner/.modular/bin:$PATH" >> $GITHUB_PATH
+    - name: Checkout repo
+      uses: actions/checkout@v2
+    - name: Install magic
+      run: |
+        curl -ssL https://magic.modular.com/6b3752cd-debc-45dd-b249-5d4941e1c18c | bash
+        echo "/home/runner/.modular/bin:$PATH" >> $GITHUB_PATH
 
-      - name: checks
-        run: |
-          /home/runner/.modular/bin/magic run fmt
+    - name: checks
+      run: |
+        /home/runner/.modular/bin/magic run fmt
 
-      - name: tests
-        run: |
-          /home/runner/.modular/bin/magic run test
+    - name: tests
+      run: |
+        /home/runner/.modular/bin/magic run test
 
