@@ -124,26 +124,18 @@ A couple of notable limitations:
 
 6. No `ChunkedArray`s, `RecordBatch`es, `Table`s are implemented yet, but soon they will be.
 
-7. No CI has been set up yet, but it is going to be in focus really soon.
-
 ## Development
 
 I shared the implementation it its current state so others can join the effort.
 If the project manages to evolve, ideally it should be donated to the upstream Apache Arrow project.
 
-Given an existing Mojo installation the tests can be run with:
+Please install magic by following the instructions in the [documentation](https://docs.modular.com/magic/).
+The tests can be run with:
 
 ```bash
-cd firebolt
-mojo test firebolt -I .
-```
-
-Tested with nightly `Mojo`:
+magic run test
 
 ```bash
-$ mojo --version
-mojo 2024.7.1805 (0a697965)
-```
 
 ## References
 

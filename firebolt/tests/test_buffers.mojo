@@ -1,20 +1,25 @@
 from testing import assert_equal, assert_true, assert_false
+from sys.info import alignof
 
 from firebolt.buffers import *
+
+
+def is_aligned[T: AnyType](ptr: UnsafePointer[T], alignment: Int) -> Bool:
+    return (Int(ptr) % alignment) == 0
 
 
 def test_buffer_init():
     var b = Buffer.alloc(10)
     assert_equal(b.size, 64)
-    assert_true(b.ptr.is_aligned[64]())
+    assert_true(is_aligned(b.ptr, 64))
 
     var b1 = Buffer.alloc[DType.bool](10)
     assert_equal(b1.size, 64)
-    assert_true(b1.ptr.is_aligned[64]())
+    assert_true(is_aligned(b1.ptr, 64))
 
     var b2 = Buffer.alloc[DType.bool](64 * 8 + 1)
     assert_equal(b2.size, 128)
-    assert_true(b2.ptr.is_aligned[64]())
+    assert_true(is_aligned(b2.ptr, 64))
 
 
 def test_buffer_grow():
@@ -52,7 +57,7 @@ def test_bitmap():
     assert_equal(b.length[DType.bool](), 64 * 8)
 
     b.unsafe_set(0, True)
-    assert_true(b.unsafe_get(0))
-    assert_false(b.unsafe_get(1))
+    assert_true(b.unsafe_get[DType.bool](0))
+    assert_false(b.unsafe_get[DType.bool](1))
     b.unsafe_set(1, True)
-    assert_true(b.unsafe_get(1))
+    assert_true(b.unsafe_get[DType.bool](1))

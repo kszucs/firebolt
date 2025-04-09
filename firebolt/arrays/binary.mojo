@@ -1,15 +1,17 @@
+from memory import ArcPointer, memcpy
+from collections.string import StringSlice
 from ..buffers import Buffer
 from ..dtypes import *
 
 
 struct StringArray(Array):
     var data: ArrayData
-    var bitmap: Arc[Buffer]
-    var offsets: Arc[Buffer]
-    var values: Arc[Buffer]
+    var bitmap: ArcPointer[Buffer]
+    var offsets: ArcPointer[Buffer]
+    var values: ArcPointer[Buffer]
     var capacity: Int
 
-    fn __init__(inout self, data: ArrayData) raises:
+    fn __init__(out self, data: ArrayData) raises:
         if data.dtype != string:
             raise Error("Unexpected dtype")
         elif len(data.buffers) != 2:
@@ -21,7 +23,7 @@ struct StringArray(Array):
         self.values = data.buffers[1]
         self.capacity = data.length
 
-    fn __init__(inout self, capacity: Int = 0):
+    fn __init__(out self, capacity: Int = 0):
         var bitmap = Buffer.alloc[DType.bool](capacity)
         # TODO(kszucs): initial values capacity should be either 0 or some value received from the user
         var values = Buffer.alloc[DType.uint8](capacity)
@@ -37,10 +39,10 @@ struct StringArray(Array):
             length=0,
             bitmap=self.bitmap,
             buffers=List(self.offsets, self.values),
-            children=List[Arc[ArrayData]](),
+            children=List[ArcPointer[ArrayData]](),
         )
 
-    fn __moveinit__(inout self, owned existing: Self):
+    fn __moveinit__(out self, owned existing: Self):
         self.data = existing.data^
         self.bitmap = existing.bitmap^
         self.offsets = existing.offsets^
@@ -53,17 +55,17 @@ struct StringArray(Array):
     fn as_data(self) -> ArrayData:
         return self.data
 
-    fn grow(inout self, capacity: Int):
+    fn grow(mut self, capacity: Int):
         self.bitmap[].grow[DType.bool](capacity)
         self.offsets[].grow[DType.uint32](capacity + 1)
         self.capacity = capacity
 
-    # fn shrink_to_fit(inout self):
+    # fn shrink_to_fit(out self):
 
     fn is_valid(self, index: Int) -> Bool:
         return self.bitmap[].unsafe_get[DType.bool](index)
 
-    fn unsafe_append(inout self, value: String):
+    fn unsafe_append(mut self, value: String):
         # todo(kszucs): use unsafe set
         var index = self.data.length
         var last_offset = self.offsets[].unsafe_get[DType.uint32](index)
@@ -72,21 +74,21 @@ struct StringArray(Array):
         self.bitmap[].unsafe_set[DType.bool](index, True)
         self.offsets[].unsafe_set[DType.uint32](index + 1, next_offset)
         self.values[].grow[DType.uint8](next_offset)
-        var dst_address = self.values[].offset(int(last_offset))
+        var dst_address = self.values[].offset(Int(last_offset))
         var src_address = value.unsafe_ptr()
         memcpy(dst_address, src_address, len(value))
 
-    fn unsafe_get(self, index: Int) -> String:
-        var start_offset = self.offsets[].unsafe_get[DType.int32](index)
-        var end_offset = self.offsets[].unsafe_get[DType.int32](index + 1)
-        var address = self.values[].offset(int(start_offset))
-        var length = int(end_offset - start_offset)
-        return StringRef(address, length)
+    fn unsafe_get(self, index: UInt) -> StringSlice[__origin_of(self)]:
+        var start_offset = self.offsets[].unsafe_get[DType.uint32](index)
+        var end_offset = self.offsets[].unsafe_get[DType.uint32](index + 1)
+        var address = self.values[].offset(Int(start_offset))
+        var length = UInt(Int(end_offset - start_offset))
+        return StringSlice[__origin_of(self)](ptr=address, length=length)
 
-    fn unsafe_set(inout self, index: Int, value: String) raises:
+    fn unsafe_set(mut self, index: Int, value: String) raises:
         var start_offset = self.offsets[].unsafe_get[DType.int32](index)
         var end_offset = self.offsets[].unsafe_get[DType.int32](index + 1)
-        var length = int(end_offset - start_offset)
+        var length = Int(end_offset - start_offset)
 
         if length != len(value):
             raise Error(
@@ -94,6 +96,6 @@ struct StringArray(Array):
                 " length"
             )
 
-        var dst_address = self.values[].offset(int(start_offset))
+        var dst_address = self.values[].offset(Int(start_offset))
         var src_address = value.unsafe_ptr()
         memcpy(dst_address, src_address, length)

@@ -3,6 +3,7 @@ from testing import assert_equal, assert_true, assert_false
 
 from firebolt.arrays import *
 from firebolt.dtypes import *
+from firebolt.arrays.tests.utils import as_bool_array_scalar
 
 
 def test_list_int_array():
@@ -27,8 +28,8 @@ def test_list_bool_array():
     var bools = BoolArray()
     var lists = ListArray(bools)
 
-    bools.append(True)
-    bools.append(False)
-    bools.append(True)
+    bools.append(as_bool_array_scalar(True))
+    bools.append(as_bool_array_scalar(False))
+    bools.append(as_bool_array_scalar(True))
     lists.unsafe_append(True)
     assert_equal(len(lists), 1)

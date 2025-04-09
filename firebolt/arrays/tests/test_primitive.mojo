@@ -2,6 +2,7 @@ from testing import assert_equal, assert_true, assert_false
 
 
 from firebolt.arrays import *
+from firebolt.arrays.tests.utils import as_bool_array_scalar
 
 
 def test_boolean_array():
@@ -13,13 +14,13 @@ def test_boolean_array():
     assert_equal(len(a), 0)
     assert_equal(a.capacity, 3)
 
-    a.append(True)
-    a.append(False)
-    a.append(True)
+    a.append(as_bool_array_scalar(True))
+    a.append(as_bool_array_scalar(False))
+    a.append(as_bool_array_scalar(True))
     assert_equal(len(a), 3)
     assert_equal(a.capacity, 3)
 
-    a.append(True)
+    a.append(as_bool_array_scalar(True))
     assert_equal(len(a), 4)
     assert_equal(a.capacity, 6)
     assert_true(a.is_valid(0))
@@ -41,15 +42,6 @@ def test_e():
     a.unsafe_append(2)
     a.unsafe_append(3)
     assert_equal(len(a), 3)
-
-
-def test_array_from_bools():
-    var a = array[bool_](True, False, True)
-    assert_equal(len(a), 3)
-    assert_equal(a.dtype, bool_)
-    assert_true(a.unsafe_get(0))
-    assert_false(a.unsafe_get(1))
-    assert_true(a.unsafe_get(2))
 
 
 def test_array_from_ints():

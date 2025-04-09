@@ -1,6 +1,8 @@
+from memory import UnsafePointer, ArcPointer
+
 import math
-from python import Python
-from sys.ffi import C_char
+from python import Python, PythonObject
+from sys.ffi import c_char
 
 from .dtypes import *
 from .arrays import *
@@ -18,9 +20,9 @@ alias CArrayReleaseFunction = fn (
 
 @value
 struct CArrowSchema:
-    var format: UnsafePointer[C_char]
-    var name: UnsafePointer[C_char]
-    var metadata: UnsafePointer[C_char]
+    var format: UnsafePointer[c_char]
+    var name: UnsafePointer[c_char]
+    var metadata: UnsafePointer[c_char]
     var flags: Int64
     var n_children: Int64
     var children: UnsafePointer[UnsafePointer[CArrowSchema]]
@@ -37,13 +39,13 @@ struct CArrowSchema:
     @staticmethod
     fn from_pyarrow(pyobj: PythonObject) raises -> CArrowSchema:
         var ptr = UnsafePointer[CArrowSchema].alloc(1)
-        pyobj._export_to_c(int(ptr))
+        pyobj._export_to_c(Int(ptr))
         return ptr.take_pointee()
 
     fn to_pyarrow(self) raises -> PythonObject:
         var pa = Python.import_module("pyarrow")
         var ptr = UnsafePointer[CArrowSchema].address_of(self)
-        return pa.Schema._import_from_c(int(ptr))
+        return pa.Schema._import_from_c(Int(ptr))
 
     @staticmethod
     fn from_dtype(dtype: DataType) -> CArrowSchema:
@@ -85,9 +87,9 @@ struct CArrowSchema:
             print("EEE")
 
             fmt = "+s"
-            n_children = int(len(dtype.fields))
+            n_children = Int(len(dtype.fields))
             children = UnsafePointer[UnsafePointer[CArrowSchema]].alloc(
-                int(n_children)
+                Int(n_children)
             )
 
             for i in range(n_children):
@@ -99,8 +101,8 @@ struct CArrowSchema:
 
         return CArrowSchema(
             format=fmt.unsafe_cstr_ptr(),
-            name=UnsafePointer[C_char](),
-            metadata=UnsafePointer[C_char](),
+            name=UnsafePointer[c_char](),
+            metadata=UnsafePointer[c_char](),
             flags=0,
             n_children=n_children,
             children=children,
@@ -128,7 +130,9 @@ struct CArrowSchema:
         )
 
     fn to_dtype(self) raises -> DataType:
-        var fmt = StringRef(self.format)
+        var fmt = StringSlice[__origin_of(self.format)](
+            unsafe_from_utf8_cstr_ptr=self.format
+        )
         # TODO(kszucs): not the nicest, but dictionary literals are not supported yet
         if fmt == "n":
             return null
@@ -172,10 +176,12 @@ struct CArrowSchema:
             raise Error("Unknown format")
 
     fn to_field(self) raises -> Field:
-        var name = StringRef(self.name)
+        var name = StringSlice[__origin_of(self)](
+            unsafe_from_utf8_cstr_ptr=self.name
+        )
         var dtype = self.to_dtype()
         var nullable = self.flags & ARROW_FLAG_NULLABLE
-        return Field(name, dtype, nullable)
+        return Field(String(name), dtype, nullable == 0)
 
 
 @value
@@ -194,11 +200,11 @@ struct CArrowArray:
     @staticmethod
     fn from_pyarrow(pyobj: PythonObject) raises -> CArrowArray:
         var ptr = UnsafePointer[CArrowArray].alloc(1)
-        pyobj._export_to_c(int(ptr))
+        pyobj._export_to_c(Int(ptr))
         return ptr.take_pointee()
 
     fn to_array(self, dtype: DataType) raises -> ArrayData:
-        var bitmap: Arc[Buffer]
+        var bitmap: ArcPointer[Buffer]
         if self.buffers[0]:
             bitmap = Buffer.view(self.buffers[0], self.length, DType.bool)
         else:
@@ -206,7 +212,7 @@ struct CArrowArray:
             # case we allocate a new buffer to hold the null bitmap
             bitmap = Buffer.alloc[DType.uint8](self.length)
 
-        var buffers = List[Arc[Buffer]]()
+        var buffers = List[ArcPointer[Buffer]]()
         if dtype.is_numeric():
             var buffer = Buffer.view(self.buffers[1], self.length, dtype.native)
             buffers.append(buffer^)
@@ -214,7 +220,7 @@ struct CArrowArray:
             var offsets = Buffer.view(
                 self.buffers[1], self.length + 1, DType.uint32
             )
-            var values_size = int(offsets.unsafe_get(int(self.length)))
+            var values_size = Int(offsets.unsafe_get(Int(self.length)))
             var values = Buffer.view(self.buffers[2], values_size, DType.uint8)
             buffers.append(offsets^)
             buffers.append(values^)
@@ -226,7 +232,7 @@ struct CArrowArray:
         else:
             raise Error("Unknown dtype")
 
-        var children = List[Arc[ArrayData]]()
+        var children = List[ArcPointer[ArrayData]]()
         for i in range(self.n_children):
             var child_field = dtype.fields[i]
             var child_array = self.children[i][].to_array(child_field.dtype)
@@ -234,7 +240,7 @@ struct CArrowArray:
 
         return ArrayData(
             dtype=dtype,
-            length=int(self.length),
+            length=Int(self.length),
             bitmap=bitmap,
             buffers=buffers,
             children=children,

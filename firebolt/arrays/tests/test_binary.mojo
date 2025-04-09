@@ -20,4 +20,4 @@ def test_string_builder():
     assert_equal(a.capacity, 2)
 
     var s = a.unsafe_get(0)
-    assert_equal(s, "hello")
+    assert_equal(String(s), "hello")

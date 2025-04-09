@@ -5,19 +5,21 @@ on: [push]
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      MODULAR_HOME: "/home/runner/.modular"
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Mojo
-      uses: kszucs/setup-mojo@main
-      with:
-        version: '2024.7.1805'
-    - name: Verify Mojo installation
+    - name: Checkout repo
+      uses: actions/checkout@v2
+    - name: Install magic
       run: |
-        mojo --version
-        echo "Modular Home: $MODULAR_HOME"
-    - name: Install PyArrow
+        curl -ssL https://magic.modular.com/6b3752cd-debc-45dd-b249-5d4941e1c18c | bash
+        echo "/home/runner/.modular/bin:$PATH" >> $GITHUB_PATH
+
+    - name: checks
       run: |
-        pip install pyarrow
-    - name: Test Firebolt
+        /home/runner/.modular/bin/magic run fmt
+
+    - name: tests
       run: |
-        mojo test firebolt -I .
+        /home/runner/.modular/bin/magic run test
+
