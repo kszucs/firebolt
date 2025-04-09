@@ -18,6 +18,7 @@ jobs:
     - name: checks
       run: |
         /home/runner/.modular/bin/magic run fmt
+        /home/runner/.modular/bin/magic run ruff check .
 
     - name: tests
       run: |
