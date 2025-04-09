@@ -10,7 +10,7 @@ struct ListArray(Array):
     var values: ArcPointer[ArrayData]
     var capacity: Int
 
-    fn __init__(mut self, data: ArrayData) raises:
+    fn __init__(out self, data: ArrayData) raises:
         if not data.dtype.is_list():
             raise Error("Unexpected dtype")
         elif len(data.buffers) != 1:
@@ -24,7 +24,7 @@ struct ListArray(Array):
         self.values = data.children[0]
         self.capacity = data.length
 
-    fn __init__[T: Array](mut self, values: T, capacity: Int = 0):
+    fn __init__[T: Array](out self, values: T, capacity: Int = 0):
         var bitmap = Buffer.alloc[DType.bool](capacity)
         var offsets = Buffer.alloc[DType.uint32](capacity + 1)
         offsets.unsafe_set[DType.uint32](0, 0)
@@ -44,7 +44,7 @@ struct ListArray(Array):
             children=List(self.values),
         )
 
-    fn __moveinit__(mut self, owned existing: Self):
+    fn __moveinit__(out self, owned existing: Self):
         self.data = existing.data^
         self.bitmap = existing.bitmap^
         self.offsets = existing.offsets^

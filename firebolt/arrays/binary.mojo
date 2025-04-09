@@ -11,7 +11,7 @@ struct StringArray(Array):
     var values: ArcPointer[Buffer]
     var capacity: Int
 
-    fn __init__(mut self, data: ArrayData) raises:
+    fn __init__(out self, data: ArrayData) raises:
         if data.dtype != string:
             raise Error("Unexpected dtype")
         elif len(data.buffers) != 2:
@@ -23,7 +23,7 @@ struct StringArray(Array):
         self.values = data.buffers[1]
         self.capacity = data.length
 
-    fn __init__(mut self, capacity: Int = 0):
+    fn __init__(out self, capacity: Int = 0):
         var bitmap = Buffer.alloc[DType.bool](capacity)
         # TODO(kszucs): initial values capacity should be either 0 or some value received from the user
         var values = Buffer.alloc[DType.uint8](capacity)
@@ -42,7 +42,7 @@ struct StringArray(Array):
             children=List[ArcPointer[ArrayData]](),
         )
 
-    fn __moveinit__(mut self, owned existing: Self):
+    fn __moveinit__(out self, owned existing: Self):
         self.data = existing.data^
         self.bitmap = existing.bitmap^
         self.offsets = existing.offsets^
@@ -60,7 +60,7 @@ struct StringArray(Array):
         self.offsets[].grow[DType.uint32](capacity + 1)
         self.capacity = capacity
 
-    # fn shrink_to_fit(mut self):
+    # fn shrink_to_fit(out self):
 
     fn is_valid(self, index: Int) -> Bool:
         return self.bitmap[].unsafe_get[DType.bool](index)

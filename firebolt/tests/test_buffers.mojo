@@ -4,7 +4,7 @@ from sys.info import alignof
 from firebolt.buffers import *
 
 
-def is_aligned[T: AnyType](ptr: UnsafePointer[T], alignment: Int):
+def is_aligned[T: AnyType](ptr: UnsafePointer[T], alignment: Int) -> Bool:
     return (Int(ptr) % alignment) == 0
 
 

@@ -13,7 +13,7 @@ struct PrimitiveArray[T: DataType](Array):
     var buffer: ArcPointer[Buffer]
     var capacity: Int
 
-    fn __init__(mut self, data: ArrayData) raises:
+    fn __init__(out self, data: ArrayData) raises:
         # TODO(kszucs): put a dtype constraint here
         if data.dtype != T:
             raise Error("Unexpected dtype")
@@ -25,7 +25,7 @@ struct PrimitiveArray[T: DataType](Array):
         self.buffer = data.buffers[0]
         self.capacity = data.length
 
-    fn __init__(mut self, capacity: Int = 0):
+    fn __init__(out self, capacity: Int = 0):
         self.capacity = capacity
         self.bitmap = Buffer.alloc[DType.bool](capacity)
         self.buffer = Buffer.alloc[T.native](capacity)
@@ -37,7 +37,7 @@ struct PrimitiveArray[T: DataType](Array):
             children=List[ArcPointer[ArrayData]](),
         )
 
-    fn __moveinit__(mut self, owned existing: Self):
+    fn __moveinit__(out self, owned existing: Self):
         self.data = existing.data^
         self.bitmap = existing.bitmap^
         self.buffer = existing.buffer^
@@ -96,8 +96,3 @@ alias UInt8Array = PrimitiveArray[uint8]
 alias UInt16Array = PrimitiveArray[uint16]
 alias UInt32Array = PrimitiveArray[uint32]
 alias UInt64Array = PrimitiveArray[uint64]
-
-
-fn as_bool_array_scalar(value: Bool) -> BoolArray.scalar:
-    """Bool conversion function."""
-    return BoolArray.scalar(Scalar[DType.bool](value))

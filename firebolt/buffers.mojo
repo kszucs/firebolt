@@ -18,13 +18,13 @@ struct Buffer(Movable):
     var owns: Bool
 
     fn __init__(
-        mut self, ptr: UnsafePointer[UInt8], size: Int, owns: Bool = True
+        out self, ptr: UnsafePointer[UInt8], size: Int, owns: Bool = True
     ):
         self.ptr = ptr
         self.size = size
         self.owns = owns
 
-    fn __moveinit__(mut self, owned existing: Self):
+    fn __moveinit__(out self, owned existing: Self):
         self.ptr = existing.ptr
         self.size = existing.size
         self.owns = existing.owns

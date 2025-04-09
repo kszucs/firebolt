@@ -148,7 +148,7 @@ struct Field(CollectionElement, EqualityComparable):
     var nullable: Bool
 
     fn __init__(
-        mut self, name: String, dtype: DataType, nullable: Bool = False
+        out self, name: String, dtype: DataType, nullable: Bool = False
     ):
         self.name = name
         self.dtype = dtype
@@ -170,12 +170,12 @@ struct DataType(CollectionElement, EqualityComparable, Stringable):
     var native: DType
     var fields: List[Field]
 
-    fn __init__(mut self, *, code: UInt8):
+    fn __init__(out self, *, code: UInt8):
         self.code = code
         self.native = DType.invalid
         self.fields = List[Field]()
 
-    fn __init__(mut self, native: DType):
+    fn __init__(out self, native: DType):
         if native is DType.bool:
             self.code = BOOL
         elif native is DType.int8:
@@ -203,22 +203,22 @@ struct DataType(CollectionElement, EqualityComparable, Stringable):
         self.native = native
         self.fields = List[Field]()
 
-    fn __init__(mut self, *, code: UInt8, native: DType):
+    fn __init__(out self, *, code: UInt8, native: DType):
         self.code = code
         self.native = native
         self.fields = List[Field]()
 
-    fn __init__(mut self, *, code: UInt8, fields: List[Field]):
+    fn __init__(out self, *, code: UInt8, fields: List[Field]):
         self.code = code
         self.native = DType.invalid
         self.fields = fields
 
-    fn __copyinit__(mut self, value: Self):
+    fn __copyinit__(out self, value: Self):
         self.code = value.code
         self.native = value.native
         self.fields = value.fields
 
-    fn __moveinit__(mut self, owned value: Self):
+    fn __moveinit__(out self, owned value: Self):
         self.code = value.code
         self.native = value.native
         self.fields = value.fields^

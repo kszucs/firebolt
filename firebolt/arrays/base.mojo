@@ -63,9 +63,9 @@ struct ChunkedArray:
     var length: Int
     var chunks: List[ArrayData]
 
-    fn __init__(inoutself, dtype: DataType, chunks: List[ArrayData]):
+    fn __init__(out self, dtype: DataType, chunks: List[ArrayData]):
         self.dtype = dtype
         self.chunks = chunks
         self.length = 0
         for chunk in chunks:
-            self.length += chunk.length
+            self.length += chunk[].length
