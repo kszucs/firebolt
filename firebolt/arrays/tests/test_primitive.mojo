@@ -2,7 +2,7 @@ from testing import assert_equal, assert_true, assert_false
 
 
 from firebolt.arrays import *
-from firebolt.arrays.tests.utils import as_bool_array_scalar
+from firebolt.test_fixtures.bool_array import as_bool_array_scalar
 
 
 def test_boolean_array():
