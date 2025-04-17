@@ -6,7 +6,7 @@ from ..dtypes import *
 
 struct StringArray(Array):
     var data: ArrayData
-    var bitmap: ArcPointer[Buffer]
+    var bitmap: ArcPointer[Bitmap]
     var offsets: ArcPointer[Buffer]
     var values: ArcPointer[Buffer]
     var capacity: Int
@@ -24,7 +24,7 @@ struct StringArray(Array):
         self.capacity = data.length
 
     fn __init__(out self, capacity: Int = 0):
-        var bitmap = Buffer.alloc[DType.bool](capacity)
+        var bitmap = Bitmap.alloc(capacity)
         # TODO(kszucs): initial values capacity should be either 0 or some value received from the user
         var values = Buffer.alloc[DType.uint8](capacity)
         var offsets = Buffer.alloc[DType.uint32](capacity + 1)
@@ -56,14 +56,14 @@ struct StringArray(Array):
         return self.data
 
     fn grow(mut self, capacity: Int):
-        self.bitmap[].grow[DType.bool](capacity)
+        self.bitmap[].as_buffer()[].grow[DType.bool](capacity)
         self.offsets[].grow[DType.uint32](capacity + 1)
         self.capacity = capacity
 
     # fn shrink_to_fit(out self):
 
     fn is_valid(self, index: Int) -> Bool:
-        return self.bitmap[].unsafe_get[DType.bool](index)
+        return self.bitmap[].unsafe_get(index)
 
     fn unsafe_append(mut self, value: String):
         # todo(kszucs): use unsafe set
@@ -71,7 +71,7 @@ struct StringArray(Array):
         var last_offset = self.offsets[].unsafe_get[DType.uint32](index)
         var next_offset = last_offset + len(value)
         self.data.length += 1
-        self.bitmap[].unsafe_set[DType.bool](index, True)
+        self.bitmap[].unsafe_set(index, True)
         self.offsets[].unsafe_set[DType.uint32](index + 1, next_offset)
         self.values[].grow[DType.uint8](next_offset)
         var dst_address = self.values[].offset(Int(last_offset))

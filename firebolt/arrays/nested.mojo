@@ -1,11 +1,11 @@
 from memory import ArcPointer
-from ..buffers import Buffer
+from ..buffers import Buffer, Bitmap
 from ..dtypes import *
 
 
 struct ListArray(Array):
     var data: ArrayData
-    var bitmap: ArcPointer[Buffer]
+    var bitmap: ArcPointer[Bitmap]
     var offsets: ArcPointer[Buffer]
     var values: ArcPointer[ArrayData]
     var capacity: Int
@@ -25,7 +25,7 @@ struct ListArray(Array):
         self.capacity = data.length
 
     fn __init__[T: Array](out self, values: T, capacity: Int = 0):
-        var bitmap = Buffer.alloc[DType.bool](capacity)
+        var bitmap = Bitmap.alloc(capacity)
         var offsets = Buffer.alloc[DType.uint32](capacity + 1)
         offsets.unsafe_set[DType.uint32](0, 0)
 
@@ -58,10 +58,10 @@ struct ListArray(Array):
         return self.data
 
     fn is_valid(self, index: Int) -> Bool:
-        return self.bitmap[].unsafe_get[DType.bool](index)
+        return self.bitmap[].unsafe_get(index)
 
     fn unsafe_append(mut self, is_valid: Bool):
-        self.bitmap[].unsafe_set[DType.bool](self.data.length, is_valid)
+        self.bitmap[].unsafe_set(self.data.length, is_valid)
         self.offsets[].unsafe_set[DType.uint32](
             self.data.length + 1, self.values[].length
         )
@@ -74,7 +74,7 @@ struct StructArray(Array):
     var fields: List[ArcPointer[ArrayData]]
     var capacity: Int
 
-    fn __init__(mut self, fields: List[Array], capacity: Int = 0):
+    fn __init__(out self, fields: List[Array], capacity: Int = 0):
         var field_datas = List[ArcPointer[ArrayData]]()
         var field_dtypes = List[DataType]()
         for field in fields:
@@ -96,7 +96,7 @@ struct StructArray(Array):
             children=self.fields,
         )
 
-    fn __moveinit__(mut self, owned existing: Self):
+    fn __moveinit__(out self, owned existing: Self):
         self.data = existing.data^
         self.bitmap = existing.bitmap^
         self.fields = existing.fields^
