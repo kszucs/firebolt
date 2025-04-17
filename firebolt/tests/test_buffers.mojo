@@ -52,12 +52,32 @@ def test_buffer():
 
 
 def test_bitmap():
-    var b = Buffer.alloc[DType.bool](10)
+    var b = Bitmap.alloc(10)
     assert_equal(b.size, 64)
-    assert_equal(b.length[DType.bool](), 64 * 8)
+    assert_equal(b.length(), 64 * 8)
 
+    assert_false(b.unsafe_get(0))
     b.unsafe_set(0, True)
-    assert_true(b.unsafe_get[DType.bool](0))
-    assert_false(b.unsafe_get[DType.bool](1))
+    assert_true(b.unsafe_get(0))
+    assert_false(b.unsafe_get(1))
     b.unsafe_set(1, True)
-    assert_true(b.unsafe_get[DType.bool](1))
+    assert_true(b.unsafe_get(1))
+
+
+def test_expand_bitmap() -> None:
+    var bitmap = Bitmap.alloc(6)
+    bitmap.unsafe_set(0, True)
+    bitmap.unsafe_set(5, True)
+    assert_false(bitmap.unsafe_get(1))
+
+    # Create a new bitmap with 2 bits
+    var new_bitmap = Bitmap.alloc(2)
+    new_bitmap.unsafe_set(0, True)
+
+    # Expand the bitmap
+    bitmap.extend(new_bitmap, 6, 2)
+    assert_true(bitmap.unsafe_get(0))
+    assert_false(bitmap.unsafe_get(1))
+    assert_true(bitmap.unsafe_get(5))
+    assert_true(bitmap.unsafe_get(6))
+    assert_false(bitmap.unsafe_get(10))

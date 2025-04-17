@@ -1,5 +1,6 @@
-from memory import ArcPointer
 from .primitive import *
+from ..buffers import Buffer, Bitmap
+from sys.info import sizeof
 
 
 trait Array(Movable, Sized):
@@ -11,12 +12,12 @@ trait Array(Movable, Sized):
 struct ArrayData(Movable):
     var dtype: DataType
     var length: Int
-    var bitmap: ArcPointer[Buffer]
+    var bitmap: ArcPointer[Bitmap]
     var buffers: List[ArcPointer[Buffer]]
     var children: List[ArcPointer[ArrayData]]
 
     fn is_valid(self, index: Int) -> Bool:
-        return self.bitmap[].unsafe_get[DType.bool](index)
+        return self.bitmap[].unsafe_get(index)
 
     fn as_primitive[T: DataType](self) raises -> PrimitiveArray[T]:
         return PrimitiveArray[T](self)
