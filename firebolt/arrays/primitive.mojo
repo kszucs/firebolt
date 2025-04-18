@@ -1,5 +1,5 @@
 from memory import ArcPointer
-from ..buffers import Buffer
+from ..buffers import Buffer, Bitmap
 from ..dtypes import *
 
 
@@ -9,7 +9,7 @@ struct PrimitiveArray[T: DataType](Array):
     alias dtype = T
     alias scalar = Scalar[T.native]
     var data: ArrayData
-    var bitmap: ArcPointer[Buffer]
+    var bitmap: ArcPointer[Bitmap]
     var buffer: ArcPointer[Buffer]
     var capacity: Int
 
@@ -27,7 +27,7 @@ struct PrimitiveArray[T: DataType](Array):
 
     fn __init__(out self, capacity: Int = 0):
         self.capacity = capacity
-        self.bitmap = Buffer.alloc[DType.bool](capacity)
+        self.bitmap = Bitmap.alloc(capacity)
         self.buffer = Buffer.alloc[T.native](capacity)
         self.data = ArrayData(
             dtype=T,
@@ -47,7 +47,7 @@ struct PrimitiveArray[T: DataType](Array):
         return self.data
 
     fn grow(mut self, capacity: Int):
-        self.bitmap[].grow[DType.bool](capacity)
+        self.bitmap[].as_buffer()[].grow[DType.bool](capacity)
         self.buffer[].grow[T.native](capacity)
         self.capacity = capacity
 
@@ -57,7 +57,7 @@ struct PrimitiveArray[T: DataType](Array):
 
     @always_inline
     fn is_valid(self, index: Int) -> Bool:
-        return self.bitmap[].unsafe_get[DType.bool](index)
+        return self.bitmap[].unsafe_get(index)
 
     @always_inline
     fn unsafe_get(self, index: Int) -> Self.scalar:
@@ -65,7 +65,7 @@ struct PrimitiveArray[T: DataType](Array):
 
     @always_inline
     fn unsafe_set(mut self, index: Int, value: Self.scalar):
-        self.bitmap[].unsafe_set[DType.bool](index, True)
+        self.bitmap[].unsafe_set(index, True)
         self.buffer[].unsafe_set[T.native](index, value)
 
     @always_inline
