@@ -52,12 +52,22 @@ def test_schema_primitive_fields():
 
 def test_from_c_schema() -> None:
     var pa = Python.import_module("pyarrow")
-    var table_def = Python.dict()
-    table_def["list_int"] = build_list_of_list_of_ints(pa)
-    table_def["struct_"] = build_struct(pa)
+    var pa_schema = pa.schema(
+        [
+            pa.field("field1", pa.list_(pa.int32())),
+            pa.field(
+                "field2",
+                pa.`struct`(
+                    [
+                        pa.field("field_a", pa.int32()),
+                        pa.field("field_b", pa.float64()),
+                    ]
+                ),
+            ),
+        ]
+    )
 
-    var table = pa.table(table_def)
-    var c_schema = CArrowSchema.from_pyarrow(table.schema)
+    var c_schema = CArrowSchema.from_pyarrow(pa_schema)
     var schema = Schema.from_c(c_schema)
 
     assert_equal(len(schema.fields), 2)

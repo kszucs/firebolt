@@ -13,16 +13,15 @@ struct Schema(Movable):
     var fields: List[Field]
     var metadata: Dict[String, String]
 
-    @always_inline
-    fn __init__(out self):
-        """Initializes an empty schema."""
-        self.fields = List[Field]()
-        self.metadata = Dict[String, String]()
-
-    fn __init__(out self, *, fields: List[Field]):
-        """Initializes a schema with the given fields."""
+    fn __init__(
+        out self,
+        *,
+        fields: List[Field] = List[Field](),
+        metadata: Dict[String, String] = Dict[String, String](),
+    ):
+        """Initializes a schema with the given fields, if provided."""
         self.fields = fields
-        self.metadata = Dict[String, String]()
+        self.metadata = metadata
 
     @staticmethod
     fn from_c(c_arrow_schema: CArrowSchema) raises -> Schema:
