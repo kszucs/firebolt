@@ -206,7 +206,9 @@ struct CArrowArray:
     fn to_array(self, dtype: DataType) raises -> ArrayData:
         var bitmap: ArcPointer[Bitmap]
         if self.buffers[0]:
-            bitmap = Bitmap.view(self.buffers[0], self.length, DType.bool)
+            bitmap = Bitmap(
+                Buffer.view(self.buffers[0], self.length, DType.bool)
+            )
         else:
             # bitmaps are allowed to be nullptrs by the specification, in this
             # case we allocate a new buffer to hold the null bitmap

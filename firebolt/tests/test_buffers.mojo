@@ -53,7 +53,7 @@ def test_buffer():
 
 def test_bitmap():
     var b = Bitmap.alloc(10)
-    assert_equal(b.size, 64)
+    assert_equal(b.size(), 64)
     assert_equal(b.length(), 64 * 8)
 
     assert_false(b.unsafe_get(0))

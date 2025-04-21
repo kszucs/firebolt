@@ -56,7 +56,7 @@ struct StringArray(Array):
         return self.data
 
     fn grow(mut self, capacity: Int):
-        self.bitmap[].as_buffer()[].grow[DType.bool](capacity)
+        self.bitmap[].grow(capacity)
         self.offsets[].grow[DType.uint32](capacity + 1)
         self.capacity = capacity
 

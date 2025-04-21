@@ -47,7 +47,7 @@ struct PrimitiveArray[T: DataType](Array):
         return self.data
 
     fn grow(mut self, capacity: Int):
-        self.bitmap[].as_buffer()[].grow[DType.bool](capacity)
+        self.bitmap[].grow(capacity)
         self.buffer[].grow[T.native](capacity)
         self.capacity = capacity
 

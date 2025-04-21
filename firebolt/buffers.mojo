@@ -104,37 +104,19 @@ struct Buffer(Movable):
 
 
 struct Bitmap(Writable):
-    """Hold information about the null records in an array.
+    """Hold information about the null records in an array."""
 
-    This is a specialized Buffer, not sure how to share the code.
-    """
-
-    var ptr: UnsafePointer[UInt8]
-    var size: Int
-    var owns: Bool
+    var buffer: Buffer
 
     @staticmethod
     fn alloc[I: Intable](length: I) -> Bitmap:
-        var size = _required_bytes(Int(length), DType.bool)
-        var ptr = UnsafePointer[UInt8, alignment=64].alloc(size)
-        memset_zero(ptr.bitcast[UInt8](), size)
-        return Bitmap(ptr, size)
+        return Bitmap(Buffer.alloc[DType.bool](length))
 
-    fn __init__(
-        out self, ptr: UnsafePointer[UInt8], size: Int, owns: Bool = True
-    ):
-        self.ptr = ptr
-        self.size = size
-        self.owns = owns
+    fn __init__(out self, owned buffer: Buffer):
+        self.buffer = buffer^
 
     fn __moveinit__(out self, owned existing: Self):
-        self.ptr = existing.ptr
-        self.size = existing.size
-        self.owns = existing.owns
-
-    fn __del__(owned self):
-        if self.owns:
-            self.ptr.free()
+        self.buffer = existing.buffer^
 
     fn write_to[W: Writer](self, mut writer: W):
         """
@@ -153,29 +135,24 @@ struct Bitmap(Writable):
                 writer.write("T")
             else:
                 writer.write("f")
-
-    @always_inline
-    fn as_buffer(ref self) -> UnsafePointer[Buffer]:
-        """Cast as a Buffer."""
-        return UnsafePointer.address_of(self).bitcast[Buffer]()
-
-    @staticmethod
-    fn view[
-        I: Intable, //
-    ](
-        ptr: UnsafePointer[NoneType], length: I, dtype: DType = DType.uint8
-    ) -> Bitmap:
-        var size = _required_bytes(Int(length), dtype)
-        return Bitmap(ptr.bitcast[UInt8](), size, owns=False)
+            if i > 16:
+                writer.write("...")
+                break
 
     fn unsafe_get(self, index: Int) -> Bool:
-        return self.as_buffer()[].unsafe_get[DType.bool](index)
+        return self.buffer.unsafe_get[DType.bool](index)
 
     fn unsafe_set(mut self, index: Int, value: Bool) -> None:
-        self.as_buffer()[].unsafe_set[DType.bool](index, True)
+        self.buffer.unsafe_set[DType.bool](index, value)
 
     fn length(self) -> Int:
-        return self.as_buffer()[].length[DType.bool]()
+        return self.buffer.length[DType.bool]()
+
+    fn size(self) -> Int:
+        return self.buffer.size
+
+    fn grow[I: Intable](mut self, target_length: I):
+        return self.buffer.grow[DType.bool](target_length)
 
     fn extend(
         mut self,
@@ -191,7 +168,7 @@ struct Bitmap(Writable):
             length: The number of elements to copy from the source array.
         """
         var desired_size = _required_bytes(start + length, DType.bool)
-        self.as_buffer()[].grow[DType.bool](desired_size)
+        self.buffer.grow[DType.bool](desired_size)
 
         for i in range(length):
             self.unsafe_set(i + start, other.unsafe_get(i))
