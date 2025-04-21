@@ -1,4 +1,4 @@
-from memory import UnsafePointer, memset_zero, memcpy
+from memory import UnsafePointer, memset_zero, memcpy, ArcPointer
 from sys.info import sizeof
 import math
 
@@ -101,3 +101,74 @@ struct Buffer(Movable):
         else:
             alias output = Scalar[T]
             self.ptr.bitcast[output]()[index] = value
+
+
+struct Bitmap(Writable):
+    """Hold information about the null records in an array."""
+
+    var buffer: Buffer
+
+    @staticmethod
+    fn alloc[I: Intable](length: I) -> Bitmap:
+        return Bitmap(Buffer.alloc[DType.bool](length))
+
+    fn __init__(out self, owned buffer: Buffer):
+        self.buffer = buffer^
+
+    fn __moveinit__(out self, owned existing: Self):
+        self.buffer = existing.buffer^
+
+    fn write_to[W: Writer](self, mut writer: W):
+        """
+        Formats this buffer to the provided Writer.
+
+        Parameters:
+            W: A type conforming to the Writable trait.
+
+        Args:
+            writer: The object to write to.
+        """
+
+        for i in range(self.length()):
+            var value = self.unsafe_get(i)
+            if value:
+                writer.write("T")
+            else:
+                writer.write("f")
+            if i > 16:
+                writer.write("...")
+                break
+
+    fn unsafe_get(self, index: Int) -> Bool:
+        return self.buffer.unsafe_get[DType.bool](index)
+
+    fn unsafe_set(mut self, index: Int, value: Bool) -> None:
+        self.buffer.unsafe_set[DType.bool](index, value)
+
+    fn length(self) -> Int:
+        return self.buffer.length[DType.bool]()
+
+    fn size(self) -> Int:
+        return self.buffer.size
+
+    fn grow[I: Intable](mut self, target_length: I):
+        return self.buffer.grow[DType.bool](target_length)
+
+    fn extend(
+        mut self,
+        other: Bitmap,
+        start: Int,
+        length: Int,
+    ) -> None:
+        """Extends the bitmap with the other's array's bitmap.
+
+        Args:
+            other: The bitmap to take content from.
+            start: The starting index in the destination array.
+            length: The number of elements to copy from the source array.
+        """
+        var desired_size = _required_bytes(start + length, DType.bool)
+        self.buffer.grow[DType.bool](desired_size)
+
+        for i in range(length):
+            self.unsafe_set(i + start, other.unsafe_get(i))
