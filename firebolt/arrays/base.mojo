@@ -1,6 +1,7 @@
 from .primitive import *
 from ..buffers import Buffer, Bitmap
 from sys.info import sizeof
+from bit import pop_count
 
 
 trait Array(Movable, Sized):
@@ -9,7 +10,12 @@ trait Array(Movable, Sized):
 
 
 @fieldwise_init
-struct ArrayData(Copyable, Movable):
+struct ArrayData(Copyable, Movable, Writable):
+    """ArrayData is the lower level abstraction directly usable by the library consumer.
+
+    Equivalent with https://github.com/apache/arrow/blob/7184439dea96cd285e6de00e07c5114e4919a465/cpp/src/arrow/array/data.h#L62-L84.
+    """
+
     var dtype: DataType
     var length: Int
     var bitmap: ArcPointer[Bitmap]
