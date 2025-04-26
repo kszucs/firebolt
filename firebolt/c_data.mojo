@@ -131,7 +131,7 @@ struct CArrowSchema:
 
     fn to_dtype(self) raises -> DataType:
         var fmt = StringSlice[__origin_of(self.format)](
-            unsafe_from_utf8_cstr_ptr=self.format
+            unsafe_from_utf8_ptr=self.format
         )
         # TODO(kszucs): not the nicest, but dictionary literals are not supported yet
         if fmt == "n":
@@ -177,7 +177,7 @@ struct CArrowSchema:
 
     fn to_field(self) raises -> Field:
         var name = StringSlice[__origin_of(self)](
-            unsafe_from_utf8_cstr_ptr=self.name
+            unsafe_from_utf8_ptr=self.name
         )
         var dtype = self.to_dtype()
         var nullable = self.flags & ARROW_FLAG_NULLABLE
