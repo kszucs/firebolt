@@ -1,5 +1,5 @@
 from testing import assert_equal, assert_true, assert_false
-from python import Python
+from python import Python, PythonObject
 from firebolt.c_data import *
 
 
@@ -7,7 +7,7 @@ def test_schema_from_pyarrow():
     var pa = Python.import_module("pyarrow")
     var pyint = pa.field("int_field", pa.int32())
     var pystring = pa.field("string_field", pa.string())
-    var pyschema = pa.schema([])
+    var pyschema = pa.schema(PythonObject.list())
     pyschema = pyschema.append(pyint)
     pyschema = pyschema.append(pystring)
 
@@ -23,7 +23,8 @@ def test_schema_from_pyarrow():
 def test_primitive_array_from_pyarrow():
     var pa = Python.import_module("pyarrow")
     var pyarr = pa.array(
-        [1, 2, 3, 4, 5], mask=[False, False, False, False, True]
+        PythonObject.list(1, 2, 3, 4, 5),
+        mask=PythonObject.list(False, False, False, False, True),
     )
 
     var c_array = CArrowArray.from_pyarrow(pyarr)
@@ -59,7 +60,10 @@ def test_primitive_array_from_pyarrow():
 def test_binary_array_from_pyarrow():
     var pa = Python.import_module("pyarrow")
 
-    var pyarr = pa.array(["foo", "bar", "baz"], mask=[False, False, True])
+    var pyarr = pa.array(
+        PythonObject.list("foo", "bar", "baz"),
+        mask=PythonObject.list(False, False, True),
+    )
 
     var c_array = CArrowArray.from_pyarrow(pyarr)
     var c_schema = CArrowSchema.from_pyarrow(pyarr.type)
@@ -93,10 +97,13 @@ def test_binary_array_from_pyarrow():
 def test_list_array_from_pyarrow():
     var pa = Python.import_module("pyarrow")
 
-    var pylist1 = PythonObject([1, 2, 3])
-    var pylist2 = PythonObject([4, 5])
-    var pylist3 = PythonObject([6, 7])
-    var pyarr = pa.array([pylist1, pylist2, pylist3], mask=[False, True, False])
+    var pylist1 = PythonObject.list(1, 2, 3)
+    var pylist2 = PythonObject.list(4, 5)
+    var pylist3 = PythonObject.list(6, 7)
+    var pyarr = pa.array(
+        PythonObject.list(pylist1, pylist2, pylist3),
+        mask=PythonObject.list(False, True, False),
+    )
 
     var c_array = CArrowArray.from_pyarrow(pyarr)
     var c_schema = CArrowSchema.from_pyarrow(pyarr.type)

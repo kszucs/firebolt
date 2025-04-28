@@ -24,11 +24,14 @@ def test_buffer_init():
 
 def test_buffer_grow():
     var b = Buffer.alloc(10)
+    b.unsafe_set(0, 111)
     assert_equal(b.size, 64)
     b.grow(20)
     assert_equal(b.size, 64)
+    assert_equal(b.unsafe_get(0), 111)
     b.grow(80)
     assert_equal(b.size, 128)
+    assert_equal(b.unsafe_get(0), 111)
 
 
 def test_buffer():
@@ -49,6 +52,18 @@ def test_buffer():
     # reinterpreting the underlying bits as uint16
     assert_equal(buf.unsafe_get[DType.uint16](0), 42 + (43 << 8))
     assert_equal(buf.unsafe_get[DType.uint16](1), 44)
+
+
+def test_buffer_swap():
+    var one = Buffer.alloc(10)
+    one.unsafe_set(0, 111)
+    var two = Buffer.alloc(10)
+    two.unsafe_set(0, 222)
+
+    one.swap(two)
+
+    assert_equal(one.unsafe_get(0), 222)
+    assert_equal(two.unsafe_get(0), 111)
 
 
 def test_bitmap():

@@ -29,6 +29,19 @@ struct Buffer(Movable):
         self.size = existing.size
         self.owns = existing.owns
 
+    fn swap(mut self, mut other: Self):
+        """Swap the content of this buffer with another buffer."""
+
+        var tmp_ptr = self.ptr
+        var tmp_size = self.size
+        var tmp_owns = self.owns
+        self.ptr = other.ptr
+        self.size = other.size
+        self.owns = other.owns
+        other.ptr = tmp_ptr
+        other.size = tmp_size
+        other.owns = tmp_owns
+
     @staticmethod
     fn alloc[I: Intable, //, T: DType = DType.uint8](length: I) -> Buffer:
         var size = _required_bytes(Int(length), T)
@@ -55,10 +68,7 @@ struct Buffer(Movable):
 
         var new = Buffer.alloc[T](target_length)
         memcpy(new.ptr.bitcast[UInt8](), self.ptr.bitcast[UInt8](), self.size)
-        self.ptr.free()
-        self.ptr = new.ptr
-        self.size = new.size
-        new.ptr = UnsafePointer[UInt8]()
+        self.swap(new)
 
     fn __del__(owned self):
         if self.owns:

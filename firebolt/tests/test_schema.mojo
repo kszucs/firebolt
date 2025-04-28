@@ -53,18 +53,18 @@ def test_schema_primitive_fields():
 def test_from_c_schema() -> None:
     var pa = Python.import_module("pyarrow")
     var pa_schema = pa.schema(
-        [
+        PythonObject.list(
             pa.field("field1", pa.list_(pa.int32())),
             pa.field(
                 "field2",
                 pa.`struct`(
-                    [
+                    PythonObject.list(
                         pa.field("field_a", pa.int32()),
                         pa.field("field_b", pa.float64()),
-                    ]
+                    )
                 ),
             ),
-        ]
+        )
     )
 
     var c_schema = CArrowSchema.from_pyarrow(pa_schema)
