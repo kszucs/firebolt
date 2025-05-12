@@ -219,7 +219,7 @@ struct Bitmap(Writable):
                 loaded = ~loaded
             var mask = (1 << bit_in_first_byte) - 1
             loaded &= ~mask
-            leading_zeros = Int(count_trailing_zeros(loaded))
+            var leading_zeros = Int(count_trailing_zeros(loaded))
             if leading_zeros == 0:
                 return count
             count = leading_zeros - bit_in_first_byte
