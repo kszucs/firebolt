@@ -166,3 +166,4 @@ cython_debug/
 .pixi
 # magic environments
 .magic
+.aider*
