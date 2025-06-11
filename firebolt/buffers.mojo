@@ -113,7 +113,7 @@ struct Buffer(Movable):
             self.ptr.bitcast[output]()[index] = value
 
 
-struct Bitmap(Writable):
+struct Bitmap(Movable, Writable):
     """Hold information about the null records in an array."""
 
     var buffer: Buffer

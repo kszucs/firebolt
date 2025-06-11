@@ -61,8 +61,8 @@ struct Schema(Movable):
         if not name:
             raise Error("Either an index or a name must be provided.")
         for field in self.fields:
-            if field[].name.as_string_slice() == name.value():
-                return field[]
+            if field.name.as_string_slice() == name.value():
+                return field
         raise Error(
             StringSlice("Field with name `{}` not found.").format(name.value())
         )

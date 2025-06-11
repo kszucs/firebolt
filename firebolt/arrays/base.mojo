@@ -69,4 +69,4 @@ struct ChunkedArray:
         self.chunks = chunks
         self.length = 0
         for chunk in chunks:
-            self.length += chunk[].length
+            self.length += chunk.length
