@@ -12,16 +12,11 @@ jobs:
     steps:
     - name: Checkout repo
       uses: actions/checkout@v2
-    - name: Install magic
-      run: |
-        curl -ssL https://magic.modular.com/6b3752cd-debc-45dd-b249-5d4941e1c18c | bash
-        echo "/home/runner/.modular/bin:$PATH" >> $GITHUB_PATH
-
+    - uses: prefix-dev/setup-pixi@v0.8.8
+      with:
+        cache: true
+        cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
     - name: checks
-      run: |
-        /home/runner/.modular/bin/magic run fmt
-
+      run: pixi run fmt
     - name: tests
-      run: |
-        /home/runner/.modular/bin/magic run test
-
+      run: pixi run test

@@ -142,7 +142,7 @@ alias LARGE_LIST_VIEW = 42
 
 
 @value
-struct Field(CollectionElement, EqualityComparable):
+struct Field(Copyable, Movable, EqualityComparable):
     var name: String
     var dtype: DataType
     var nullable: Bool
@@ -165,7 +165,7 @@ struct Field(CollectionElement, EqualityComparable):
         return not self == other
 
 
-struct DataType(CollectionElement, EqualityComparable, Stringable):
+struct DataType(Copyable, Movable, EqualityComparable, Stringable):
     var code: UInt8
     var native: DType
     var fields: List[Field]
@@ -346,7 +346,7 @@ fn struct_(*fields: Field) -> DataType:
     # but that doesn't seem to be supported
     var struct_fields = List[Field](capacity=len(fields))
     for field in fields:
-        struct_fields.append(field[])
+        struct_fields.append(field)
     return DataType(code=STRUCT, fields=struct_fields)
 
 

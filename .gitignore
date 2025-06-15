@@ -166,3 +166,7 @@ cython_debug/
 .pixi
 # magic environments
 .magic
+
+# pixi environments
+.pixi
+*.egg-info

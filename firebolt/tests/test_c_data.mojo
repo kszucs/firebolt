@@ -7,7 +7,7 @@ def test_schema_from_pyarrow():
     var pa = Python.import_module("pyarrow")
     var pyint = pa.field("int_field", pa.int32())
     var pystring = pa.field("string_field", pa.string())
-    var pyschema = pa.schema(PythonObject.list())
+    var pyschema = pa.schema(Python.list())
     pyschema = pyschema.append(pyint)
     pyschema = pyschema.append(pystring)
 
@@ -23,8 +23,8 @@ def test_schema_from_pyarrow():
 def test_primitive_array_from_pyarrow():
     var pa = Python.import_module("pyarrow")
     var pyarr = pa.array(
-        PythonObject.list(1, 2, 3, 4, 5),
-        mask=PythonObject.list(False, False, False, False, True),
+        Python.list(1, 2, 3, 4, 5),
+        mask=Python.list(False, False, False, False, True),
     )
 
     var c_array = CArrowArray.from_pyarrow(pyarr)
@@ -61,8 +61,8 @@ def test_binary_array_from_pyarrow():
     var pa = Python.import_module("pyarrow")
 
     var pyarr = pa.array(
-        PythonObject.list("foo", "bar", "baz"),
-        mask=PythonObject.list(False, False, True),
+        Python.list("foo", "bar", "baz"),
+        mask=Python.list(False, False, True),
     )
 
     var c_array = CArrowArray.from_pyarrow(pyarr)
@@ -97,12 +97,12 @@ def test_binary_array_from_pyarrow():
 def test_list_array_from_pyarrow():
     var pa = Python.import_module("pyarrow")
 
-    var pylist1 = PythonObject.list(1, 2, 3)
-    var pylist2 = PythonObject.list(4, 5)
-    var pylist3 = PythonObject.list(6, 7)
+    var pylist1 = Python.list(1, 2, 3)
+    var pylist2 = Python.list(4, 5)
+    var pylist3 = Python.list(6, 7)
     var pyarr = pa.array(
-        PythonObject.list(pylist1, pylist2, pylist3),
-        mask=PythonObject.list(False, True, False),
+        Python.list(pylist1, pylist2, pylist3),
+        mask=Python.list(False, True, False),
     )
 
     var c_array = CArrowArray.from_pyarrow(pyarr)
