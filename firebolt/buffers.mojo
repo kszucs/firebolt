@@ -88,23 +88,6 @@ struct Buffer(Movable):
         else:
             return self.size // sizeof[T]()
 
-    fn bit_count(self) -> Int:
-        """The number of bits with value 1 in the buffer."""
-        var start = 0
-        var count = 0
-        while start < self.size:
-            if self.size - start > simd_width:
-                count += (
-                    self.offset(start)
-                    .load[width=simd_width]()
-                    .reduce_bit_count()
-                )
-                start += simd_width
-            else:
-                count += self.offset(start).load[width=1]().reduce_bit_count()
-                start += 1
-        return count
-
     @always_inline
     fn unsafe_get[T: DType = DType.uint8](self, index: Int) -> Scalar[T]:
         alias output = Scalar[T]
@@ -189,10 +172,24 @@ struct Bitmap(Movable, Writable):
     fn grow[I: Intable](mut self, target_length: I):
         return self.buffer.grow[DType.bool](target_length)
 
-    @always_inline
     fn bit_count(self) -> Int:
-        """The number of bits with value 1 in the buffer."""
-        return self.buffer.bit_count()
+        """The number of bits with value 1 in the Bitmap."""
+        var start = 0
+        var count = 0
+        while start < self.buffer.size:
+            if self.buffer.size - start > simd_width:
+                count += (
+                    self.buffer.offset(start)
+                    .load[width=simd_width]()
+                    .reduce_bit_count()
+                )
+                start += simd_width
+            else:
+                count += (
+                    self.buffer.offset(start).load[width=1]().reduce_bit_count()
+                )
+                start += 1
+        return count
 
     fn count_leading_bits(self, start: Int = 0, value: Bool = False) -> Int:
         """Count the number of leading bits with the given value in the bitmap, starting at a given posiion.
@@ -206,6 +203,9 @@ struct Bitmap(Movable, Writable):
         Args:
           start: The position where we should start counting.
           value: The value of the bits we want to count.
+
+        Returns:
+          The number of leadinging bits with the given value in the bitmap.
         """
 
         var count = 0
@@ -248,6 +248,36 @@ struct Bitmap(Movable, Writable):
                     # break from the simd widths loop
                     break
         return count
+
+    fn count_leading_zeros(self, start: Int = 0) -> Int:
+        """Count the number of leading 0s in the given value in the bitmap, starting at a given posiion.
+
+        Note that index 0 in the bitmap translates to right most bit in the first byte of the buffer.
+        So when we are looking for leading zeros from a bitmap standpoing we need to look at
+        trailing zeros in the bitmap's associated buffer.
+
+        Args:
+            start: The position where we should start counting.
+
+        Returns:
+             The number of leading zeros in the bitmap.
+        """
+        return self.count_leading_bits(start, value=False)
+
+    fn count_leading_ones(self, start: Int = 0) -> Int:
+        """Count the number of leading 1s in the given value in the bitmap, starting at a given posiion.
+
+        Note that index 0 in the bitmap translates to right most bit in the first byte of the buffer.
+        So when we are looking for leading zeros from a bitmap standpoing we need to look at
+        trailing zeros in the bitmap's associated buffer.
+
+        Args:
+          start: The position where we should start counting.
+
+        Returns:
+          The number of leading ones in the bitmap.
+        """
+        return self.count_leading_bits(start, value=True)
 
     fn extend(
         mut self,
