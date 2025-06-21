@@ -1,6 +1,7 @@
-from memory import UnsafePointer, memset_zero, memcpy, ArcPointer
-from sys.info import sizeof
+from memory import UnsafePointer, memset_zero, memcpy, ArcPointer, Span, memset
+from sys.info import sizeof, simdbytewidth
 import math
+from bit import pop_count, count_trailing_zeros
 
 
 fn _required_bytes(length: Int, T: DType) -> Int:
@@ -10,6 +11,11 @@ fn _required_bytes(length: Int, T: DType) -> Int:
     else:
         size = length * T.sizeof()
     return math.align_up(size, 64)
+
+
+alias simd_width = simdbytewidth()
+
+alias simd_widths = (simd_width, simd_width // 2, 1)
 
 
 struct Buffer(Movable):
@@ -155,14 +161,123 @@ struct Bitmap(Movable, Writable):
     fn unsafe_set(mut self, index: Int, value: Bool) -> None:
         self.buffer.unsafe_set[DType.bool](index, value)
 
+    @always_inline
     fn length(self) -> Int:
         return self.buffer.length[DType.bool]()
 
+    @always_inline
     fn size(self) -> Int:
         return self.buffer.size
 
     fn grow[I: Intable](mut self, target_length: I):
         return self.buffer.grow[DType.bool](target_length)
+
+    fn bit_count(self) -> Int:
+        """The number of bits with value 1 in the Bitmap."""
+        var start = 0
+        var count = 0
+        while start < self.buffer.size:
+            if self.buffer.size - start > simd_width:
+                count += (
+                    self.buffer.offset(start)
+                    .load[width=simd_width]()
+                    .reduce_bit_count()
+                )
+                start += simd_width
+            else:
+                count += (
+                    self.buffer.offset(start).load[width=1]().reduce_bit_count()
+                )
+                start += 1
+        return count
+
+    fn count_leading_bits(self, start: Int = 0, value: Bool = False) -> Int:
+        """Count the number of leading bits with the given value in the bitmap, starting at a given posiion.
+
+        Note that index 0 in the bitmap translates to right most bit in the first byte of the buffer.
+        So when we are looking for leading zeros from a bitmap standpoing we need to look at
+        trailing zeros in the bitmap's associated buffer.
+
+        The SIMD API available looks at leading zeros only, we negate the input when needed.
+
+        Args:
+          start: The position where we should start counting.
+          value: The value of the bits we want to count.
+
+        Returns:
+          The number of leadinging bits with the given value in the bitmap.
+        """
+
+        var count = 0
+        var index = start // 8
+        var bit_in_first_byte = start % 8
+
+        if bit_in_first_byte != 0:
+            # Process the partial first byte by applying a mask.
+            var loaded = self.buffer.offset(index).load[width=1]()
+            if value:
+                loaded = ~loaded
+            var mask = (1 << bit_in_first_byte) - 1
+            loaded &= ~mask
+            leading_zeros = Int(count_trailing_zeros(loaded))
+            if leading_zeros == 0:
+                return count
+            count = leading_zeros - bit_in_first_byte
+            if leading_zeros != 8:
+                # The first byte has some bits of the other value, just return the count.
+                return count
+
+            index += 1
+
+        # Process full bytes.
+        while index < self.size():
+
+            @parameter
+            for width_index in range(len(simd_widths)):
+                alias width = simd_widths[width_index]
+                if self.size() - index >= width:
+                    var loaded = self.buffer.offset(index).load[width=width]()
+                    if value:
+                        loaded = ~loaded
+                    var leading_zeros = count_trailing_zeros(loaded)
+                    for i in range(width):
+                        count += Int(leading_zeros[i])
+                        if leading_zeros[i] != 8:
+                            return count
+                    index += width
+                    # break from the simd widths loop
+                    break
+        return count
+
+    fn count_leading_zeros(self, start: Int = 0) -> Int:
+        """Count the number of leading 0s in the given value in the bitmap, starting at a given posiion.
+
+        Note that index 0 in the bitmap translates to right most bit in the first byte of the buffer.
+        So when we are looking for leading zeros from a bitmap standpoing we need to look at
+        trailing zeros in the bitmap's associated buffer.
+
+        Args:
+            start: The position where we should start counting.
+
+        Returns:
+             The number of leading zeros in the bitmap.
+        """
+        return self.count_leading_bits(start, value=False)
+
+    fn count_leading_ones(self, start: Int = 0) -> Int:
+        """Count the number of leading 1s in the given value in the bitmap, starting at a given posiion.
+
+        Note that index 0 in the bitmap translates to right most bit in the first byte of the buffer.
+        So when we are looking for leading zeros from a bitmap standpoing we need to look at
+        trailing zeros in the bitmap's associated buffer.
+
+        Args:
+          start: The position where we should start counting.
+
+        Returns:
+          The number of leading ones in the bitmap.
+        """
+        return self.count_leading_bits(start, value=True)
 
     fn extend(
         mut self,
@@ -182,3 +297,71 @@ struct Bitmap(Movable, Writable):
 
         for i in range(length):
             self.unsafe_set(i + start, other.unsafe_get(i))
+
+    fn partial_byte_set(
+        mut self,
+        byte_index: Int,
+        bit_pos_start: Int,
+        bit_pos_end: Int,
+        value: Bool,
+    ) -> None:
+        """Set a range of bits in one specific byte of the bitmap to the specified value.
+        """
+
+        debug_assert(
+            bit_pos_start >= 0
+            and bit_pos_end <= 8
+            and bit_pos_start <= bit_pos_end,
+            "Invalid range: ",
+            bit_pos_start,
+            " to ",
+            bit_pos_end,
+        )
+
+        # Process the partial byte at the start, if appropriate.
+        var mask = (1 << (bit_pos_end - bit_pos_start)) - 1
+        mask = mask << bit_pos_start
+        var initial_value = self.buffer.unsafe_get[DType.uint8](byte_index)
+        var buffer_value = initial_value
+        if value:
+            buffer_value = buffer_value | mask
+        else:
+            buffer_value = buffer_value & ~mask
+        self.buffer.unsafe_set[DType.uint8](byte_index, buffer_value)
+
+    fn unsafe_range_set(mut self, start: Int, length: Int, value: Bool) -> None:
+        """Set a range of bits in the bitmap to the specified value.
+
+        Args:
+            start: The starting index in the bitmap.
+            length: The number of bits to set.
+            value: The value to set the bits to.
+        """
+
+        # Process the partial byte at the ends.
+        var start_index = start // 8
+        var bit_pos_start = start % 8
+        var end_index = (start + length) // 8
+        var bit_pos_end = (start + length) % 8
+
+        if bit_pos_start != 0 or bit_pos_end != 0:
+            if start_index == end_index:
+                self.partial_byte_set(
+                    start_index, bit_pos_start, bit_pos_end, value
+                )
+            else:
+                if bit_pos_start != 0:
+                    self.partial_byte_set(start_index, bit_pos_start, 8, value)
+                    start_index += 1
+                if bit_pos_end != 0:
+                    self.partial_byte_set(end_index, 0, bit_pos_end, value)
+                    end_index -= 1
+
+        # Now take care of the full bytes.
+        if end_index > start_index:
+            var byte_value = 255 if value else 0
+            memset(
+                self.buffer.offset(start_index),
+                value=byte_value,
+                count=end_index - start_index,
+            )
