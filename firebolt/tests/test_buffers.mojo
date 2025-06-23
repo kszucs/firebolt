@@ -139,7 +139,6 @@ def test_unsafe_range_set():
             bitmap.unsafe_range_set(start_bit, 2, True)
             assert_bitmap_set(bitmap, List(start_bit, start_bit + 1), "range 2")
 
-
 def test_partial_byte_set():
     var bitmap = Bitmap.alloc(16)
 
