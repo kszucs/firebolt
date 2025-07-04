@@ -14,18 +14,18 @@ struct ChunkedArray:
     var length: Int
     var chunks: List[ArrayData]
 
-    fn _compute_lenght(mut self) -> None:
+    fn _compute_length(mut self) -> None:
         """Update the length of the array from the length of its chunks."""
-        var length = 0
+        var total_length = 0
         for chunk in self.chunks:
-            length += chunk.length
-        self.length = length
+            total_length += chunk.length
+        self.length = total_length
 
     fn __init__(out self, dtype: DataType, chunks: List[ArrayData]):
         self.dtype = dtype
         self.chunks = chunks
         self.length = 0
-        self._compute_lenght()
+        self._compute_length()
 
     fn chunk(self, index: Int) -> ref [self.chunks] ArrayData:
         """Returns the chunk at the given index.
