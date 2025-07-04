@@ -141,7 +141,7 @@ alias LIST_VIEW = 41
 alias LARGE_LIST_VIEW = 42
 
 
-struct Field(Copyable, Movable, EqualityComparable):
+struct Field(Copyable, EqualityComparable, Movable):
     var name: String
     var dtype: DataType
     var nullable: Bool
@@ -164,7 +164,7 @@ struct Field(Copyable, Movable, EqualityComparable):
         return not self == other
 
 
-struct DataType(Copyable, Movable, EqualityComparable, Stringable):
+struct DataType(Copyable, EqualityComparable, Movable, Stringable):
     var code: UInt8
     var native: DType
     var fields: List[Field]
