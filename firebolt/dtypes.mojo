@@ -141,7 +141,6 @@ alias LIST_VIEW = 41
 alias LARGE_LIST_VIEW = 42
 
 
-@value
 struct Field(Copyable, Movable, EqualityComparable):
     var name: String
     var dtype: DataType

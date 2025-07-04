@@ -18,8 +18,8 @@ alias CArrayReleaseFunction = fn (
 ) -> NoneType
 
 
-@value
-struct CArrowSchema:
+@fieldwise_init
+struct CArrowSchema(Copyable, Movable):
     var format: UnsafePointer[c_char]
     var name: UnsafePointer[c_char]
     var metadata: UnsafePointer[c_char]
@@ -184,8 +184,8 @@ struct CArrowSchema:
         return Field(String(name), dtype, nullable == 0)
 
 
-@value
-struct CArrowArray:
+@fieldwise_init
+struct CArrowArray(Copyable, Movable):
     var length: Int64
     var null_count: Int64
     var offset: Int64
