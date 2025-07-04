@@ -8,8 +8,8 @@ trait Array(Movable, Sized):
         ...
 
 
-@value
-struct ArrayData(Movable):
+@fieldwise_init
+struct ArrayData(Copyable,Movable):
     var dtype: DataType
     var length: Int
     var bitmap: ArcPointer[Bitmap]

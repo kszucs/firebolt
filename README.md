@@ -14,7 +14,7 @@ The implementation is far from being complete or usable in practice, but I prefe
 
 ### Why Arrow in Mojo?
 
-I find the Mojo lanauge really promising and Arrow should be a first-class citizen in Mojo's ecosystem. Since the language itself is still in its early stages, under heavy development, this Arrow implementation is still in an experimental phase.
+I find the Mojo language really promising and Arrow should be a first-class citizen in Mojo's ecosystem. Since the language itself is still in its early stages, under heavy development, this Arrow implementation is still in an experimental phase.
 
 ## Currently implemented abstractions
 
@@ -129,11 +129,11 @@ A couple of notable limitations:
 I shared the implementation it its current state so others can join the effort.
 If the project manages to evolve, ideally it should be donated to the upstream Apache Arrow project.
 
-Please install magic by following the instructions in the [documentation](https://docs.modular.com/magic/).
+Please install pixi by following the instructions in the [documentation](https://pixi.sh/latest/installation/).
 The tests can be run with:
 
 ```bash
-magic run test
+pixi run test
 
 ```bash
 
