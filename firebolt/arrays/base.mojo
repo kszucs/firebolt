@@ -9,7 +9,7 @@ trait Array(Movable, Sized):
 
 
 @fieldwise_init
-struct ArrayData(Copyable,Movable):
+struct ArrayData(Copyable, Movable):
     var dtype: DataType
     var length: Int
     var bitmap: ArcPointer[Bitmap]
