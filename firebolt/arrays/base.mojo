@@ -9,7 +9,7 @@ trait Array(Movable, Sized):
 
 
 @fieldwise_init
-struct ArrayData(Copyable, Movable):
+struct ArrayData(Copyable,Movable):
     var dtype: DataType
     var length: Int
     var bitmap: ArcPointer[Bitmap]
@@ -57,3 +57,16 @@ struct ArrayData(Copyable, Movable):
 
     fn as_list(self) raises -> ListArray:
         return ListArray(self)
+
+
+struct ChunkedArray:
+    var dtype: DataType
+    var length: Int
+    var chunks: List[ArrayData]
+
+    fn __init__(out self, dtype: DataType, chunks: List[ArrayData]):
+        self.dtype = dtype
+        self.chunks = chunks
+        self.length = 0
+        for chunk in chunks:
+            self.length += chunk.length
