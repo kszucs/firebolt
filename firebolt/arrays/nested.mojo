@@ -44,7 +44,7 @@ struct ListArray(Array):
             children=List(self.values),
         )
 
-    fn __moveinit__(out self, owned existing: Self):
+    fn __moveinit__(out self, var existing: Self):
         self.data = existing.data^
         self.bitmap = existing.bitmap^
         self.offsets = existing.offsets^
@@ -96,7 +96,7 @@ struct StructArray(Array):
             children=self.fields,
         )
 
-    fn __moveinit__(out self, owned existing: Self):
+    fn __moveinit__(out self, var existing: Self):
         self.data = existing.data^
         self.bitmap = existing.bitmap^
         self.fields = existing.fields^

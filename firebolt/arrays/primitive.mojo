@@ -37,7 +37,7 @@ struct PrimitiveArray[T: DataType](Array):
             children=List[ArcPointer[ArrayData]](),
         )
 
-    fn __moveinit__(out self, owned existing: Self):
+    fn __moveinit__(out self, var existing: Self):
         self.data = existing.data^
         self.bitmap = existing.bitmap^
         self.buffer = existing.buffer^
