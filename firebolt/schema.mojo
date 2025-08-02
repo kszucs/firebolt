@@ -33,7 +33,7 @@ struct Schema(Copyable, Movable):
 
         return Schema(fields=fields)
 
-    fn append(mut self, owned field: Field):
+    fn append(mut self, var field: Field):
         """Appends a field to the schema."""
         self.fields.append(field^)
 
@@ -41,7 +41,7 @@ struct Schema(Copyable, Movable):
         """Returns the names of the fields in the schema."""
         var names = List[String]()
         for field in self.fields:
-            names.append(field[].name)
+            names.append(field.name)
         return names
 
     fn field(

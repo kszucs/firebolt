@@ -30,7 +30,7 @@ struct Buffer(Movable):
         self.size = size
         self.owns = owns
 
-    fn __moveinit__(out self, owned existing: Self):
+    fn __moveinit__(out self, var existing: Self):
         self.ptr = existing.ptr
         self.size = existing.size
         self.owns = existing.owns
@@ -76,7 +76,7 @@ struct Buffer(Movable):
         memcpy(new.ptr.bitcast[UInt8](), self.ptr.bitcast[UInt8](), self.size)
         self.swap(new)
 
-    fn __del__(owned self):
+    fn __del__(var self):
         if self.owns:
             self.ptr.free()
 
@@ -128,10 +128,10 @@ struct Bitmap(Movable, Writable):
     fn alloc[I: Intable](length: I) -> Bitmap:
         return Bitmap(Buffer.alloc[DType.bool](length))
 
-    fn __init__(out self, owned buffer: Buffer):
+    fn __init__(out self, var buffer: Buffer):
         self.buffer = buffer^
 
-    fn __moveinit__(out self, owned existing: Self):
+    fn __moveinit__(out self, var existing: Self):
         self.buffer = existing.buffer^
 
     fn write_to[W: Writer](self, mut writer: W):

@@ -217,7 +217,7 @@ struct DataType(Copyable, EqualityComparable, Movable, Stringable):
         self.native = value.native
         self.fields = value.fields
 
-    fn __moveinit__(out self, owned value: Self):
+    fn __moveinit__(out self, var value: Self):
         self.code = value.code
         self.native = value.native
         self.fields = value.fields^

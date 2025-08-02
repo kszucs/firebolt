@@ -14,10 +14,6 @@ from firebolt.dtypes import (
 )
 from firebolt.dtypes import float16, float32, float64, binary, string, list_
 from firebolt.c_data import Field, CArrowSchema
-from firebolt.test_fixtures.pyarrow_fields import (
-    build_list_of_list_of_ints,
-    build_struct,
-)
 
 
 def test_schema_primitive_fields():
@@ -48,6 +44,25 @@ def test_schema_primitive_fields():
     # Check the names of the fields in the schema
     for i in range(len(fields)):
         assert_equal(schema.field(index=i).name, "field" + String(i + 1))
+
+
+def test_schema_names() -> None:
+    fields = List[Field](
+        Field("field1", int8),
+        Field("field2", int16),
+    )
+
+    var schema = Schema(fields=fields)
+    assert_equal(
+        schema.names(),
+        List[String](["field{}".format(i + 1) for i in range(2)]),
+    )
+
+    schema.append(Field("field3", int32))
+    assert_equal(
+        schema.names(),
+        List[String](["field{}".format(i + 1) for i in range(3)]),
+    )
 
 
 def test_from_c_schema() -> None:
