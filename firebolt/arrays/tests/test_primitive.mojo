@@ -3,6 +3,7 @@ from testing import assert_equal, assert_true, assert_false
 
 from firebolt.arrays import *
 from firebolt.test_fixtures.bool_array import as_bool_array_scalar
+from firebolt.test_fixtures.arrays import build_array_data, assert_bitmap_set
 
 
 def test_boolean_array():
@@ -50,3 +51,24 @@ def test_array_from_ints():
     assert_equal(g.dtype, int8)
     assert_equal(g.unsafe_get(0), 1)
     assert_equal(g.unsafe_get(1), 2)
+
+
+def test_drop_null() -> None:
+    """Test the drop null function."""
+    var array_data = build_array_data(10, 5)
+
+    var primitive_array = PrimitiveArray[uint8](array_data^)
+    #
+    # Check the setup.
+    assert_equal(primitive_array.null_count(), 5)
+    assert_bitmap_set(
+        primitive_array.bitmap[], List[Int](1, 3, 5, 7, 9), "check setup"
+    )
+
+    primitive_array.drop_nulls[DType.uint8]()
+    assert_equal(primitive_array.unsafe_get(0), 1)
+    assert_equal(primitive_array.unsafe_get(1), 3)
+    assert_equal(primitive_array.null_count(), 0)
+    assert_bitmap_set(
+        primitive_array.bitmap[], List[Int](0, 1, 2, 3, 4), "after drop"
+    )
