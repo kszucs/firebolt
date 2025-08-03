@@ -119,6 +119,23 @@ struct Buffer(Movable):
             alias output = Scalar[T]
             self.ptr.bitcast[output]()[index] = value
 
+    fn bit_count(self) -> Int:
+        """The number of bits with value 1 in the buffer."""
+        var start = 0
+        var count = 0
+        while start < self.size:
+            if self.size - start > simd_width:
+                count += (
+                    self.offset(start)
+                    .load[width=simd_width]()
+                    .reduce_bit_count()
+                )
+                start += simd_width
+            else:
+                count += self.offset(start).load[width=1]().reduce_bit_count()
+                start += 1
+        return count
+
 
 struct Bitmap(Movable, Writable):
 
