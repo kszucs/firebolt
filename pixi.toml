@@ -10,7 +10,7 @@ test = "mojo test firebolt -I ."
 fmt = "mojo format firebolt"
 
 [dependencies]
-mojo = ">=25.6.0.dev2025080116,<26"
+mojo = ">=25.6.0.dev2025081914,<26"
 
 [pypi-dependencies]
 pyarrow = ">=19.0.1, <21"

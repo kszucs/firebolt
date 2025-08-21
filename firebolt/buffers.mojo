@@ -30,7 +30,7 @@ struct Buffer(Movable):
         self.size = size
         self.owns = owns
 
-    fn __moveinit__(out self, var existing: Self):
+    fn __moveinit__(out self, deinit existing: Self):
         self.ptr = existing.ptr
         self.size = existing.size
         self.owns = existing.owns
@@ -76,7 +76,7 @@ struct Buffer(Movable):
         memcpy(new.ptr.bitcast[UInt8](), self.ptr.bitcast[UInt8](), self.size)
         self.swap(new)
 
-    fn __del__(var self):
+    fn __del__(deinit self):
         if self.owns:
             self.ptr.free()
 
@@ -97,7 +97,8 @@ struct Buffer(Movable):
             var byte_index = index // 8
             var bit_index = index % 8
             var byte = self.ptr[byte_index]
-            return output((byte & (1 << bit_index)) != 0)
+            var wanted_bit = (byte >> bit_index) & 1
+            return Scalar[T](wanted_bit)
         else:
             return self.ptr.bitcast[output]()[index]
 
@@ -120,6 +121,7 @@ struct Buffer(Movable):
 
 
 struct Bitmap(Movable, Writable):
+
     """Hold information about the null records in an array."""
 
     var buffer: Buffer
@@ -131,7 +133,7 @@ struct Bitmap(Movable, Writable):
     fn __init__(out self, var buffer: Buffer):
         self.buffer = buffer^
 
-    fn __moveinit__(out self, var existing: Self):
+    fn __moveinit__(out self, deinit existing: Self):
         self.buffer = existing.buffer^
 
     fn write_to[W: Writer](self, mut writer: W):
