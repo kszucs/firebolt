@@ -206,31 +206,31 @@ struct CArrowArray(Copyable, Movable):
     fn to_array(self, dtype: DataType) raises -> ArrayData:
         var bitmap: ArcPointer[Bitmap]
         if self.buffers[0]:
-            bitmap = Bitmap(
-                Buffer.view(self.buffers[0], self.length, DType.bool)
+            bitmap = ArcPointer(
+                Bitmap(Buffer.view(self.buffers[0], self.length, DType.bool))
             )
         else:
             # bitmaps are allowed to be nullptrs by the specification, in this
             # case we allocate a new buffer to hold the null bitmap
-            bitmap = Bitmap.alloc(self.length)
+            bitmap = ArcPointer(Bitmap.alloc(self.length))
 
         var buffers = List[ArcPointer[Buffer]]()
         if dtype.is_numeric():
             var buffer = Buffer.view(self.buffers[1], self.length, dtype.native)
-            buffers.append(buffer^)
+            buffers.append(ArcPointer(buffer^))
         elif dtype == string:
             var offsets = Buffer.view(
                 self.buffers[1], self.length + 1, DType.uint32
             )
             var values_size = Int(offsets.unsafe_get(Int(self.length)))
             var values = Buffer.view(self.buffers[2], values_size, DType.uint8)
-            buffers.append(offsets^)
-            buffers.append(values^)
+            buffers.append(ArcPointer(offsets^))
+            buffers.append(ArcPointer(values^))
         elif dtype.is_list():
             var offsets = Buffer.view(
                 self.buffers[1], self.length + 1, DType.uint32
             )
-            buffers.append(offsets^)
+            buffers.append(ArcPointer(offsets^))
         else:
             raise Error("Unknown dtype")
 
@@ -238,7 +238,7 @@ struct CArrowArray(Copyable, Movable):
         for i in range(self.n_children):
             var child_field = dtype.fields[i]
             var child_array = self.children[i][].to_array(child_field.dtype)
-            children.append(child_array^)
+            children.append(ArcPointer(child_array^))
 
         return ArrayData(
             dtype=dtype,

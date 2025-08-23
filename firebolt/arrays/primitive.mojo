@@ -27,8 +27,8 @@ struct PrimitiveArray[T: DataType](Array):
 
     fn __init__(out self, capacity: Int = 0):
         self.capacity = capacity
-        self.bitmap = Bitmap.alloc(capacity)
-        self.buffer = Buffer.alloc[T.native](capacity)
+        self.bitmap = ArcPointer(Bitmap.alloc(capacity))
+        self.buffer = ArcPointer(Buffer.alloc[T.native](capacity))
         self.data = ArrayData(
             dtype=T,
             length=0,
@@ -37,7 +37,7 @@ struct PrimitiveArray[T: DataType](Array):
             children=List[ArcPointer[ArrayData]](),
         )
 
-    fn __moveinit__(out self, var existing: Self):
+    fn __moveinit__(out self, deinit existing: Self):
         self.data = existing.data^
         self.bitmap = existing.bitmap^
         self.buffer = existing.buffer^

@@ -31,9 +31,9 @@ struct StringArray(Array):
         offsets.unsafe_set[DType.uint32](0, 0)
 
         self.capacity = capacity
-        self.bitmap = bitmap^
-        self.offsets = offsets^
-        self.values = values^
+        self.bitmap = ArcPointer(bitmap^)
+        self.offsets = ArcPointer(offsets^)
+        self.values = ArcPointer(values^)
         self.data = ArrayData(
             dtype=string,
             length=0,
@@ -42,7 +42,7 @@ struct StringArray(Array):
             children=List[ArcPointer[ArrayData]](),
         )
 
-    fn __moveinit__(out self, var existing: Self):
+    fn __moveinit__(out self, deinit existing: Self):
         self.data = existing.data^
         self.bitmap = existing.bitmap^
         self.offsets = existing.offsets^

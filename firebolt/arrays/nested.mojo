@@ -33,9 +33,9 @@ struct ListArray(Array):
         var list_dtype = list_(values_data.dtype)
 
         self.capacity = capacity
-        self.bitmap = bitmap^
-        self.offsets = offsets^
-        self.values = values_data^
+        self.bitmap = ArcPointer(bitmap^)
+        self.offsets = ArcPointer(offsets^)
+        self.values = ArcPointer(values_data^)
         self.data = ArrayData(
             dtype=list_dtype,
             length=0,
@@ -44,7 +44,7 @@ struct ListArray(Array):
             children=List(self.values),
         )
 
-    fn __moveinit__(out self, var existing: Self):
+    fn __moveinit__(out self, deinit existing: Self):
         self.data = existing.data^
         self.bitmap = existing.bitmap^
         self.offsets = existing.offsets^
