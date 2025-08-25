@@ -9,7 +9,12 @@ trait Array(Movable, Sized):
 
 
 @fieldwise_init
-struct ArrayData(Copyable, Movable):
+struct ArrayData(Copyable, Movable, Writable):
+    """ArrayData is the lower level abstraction directly usable by the library consumer.
+
+    Equivalent with https://github.com/apache/arrow/blob/7184439dea96cd285e6de00e07c5114e4919a465/cpp/src/arrow/array/data.h#L62-L84.
+    """
+
     var dtype: DataType
     var length: Int
     var bitmap: ArcPointer[Bitmap]
@@ -57,3 +62,23 @@ struct ArrayData(Copyable, Movable):
 
     fn as_list(self) raises -> ListArray:
         return ListArray(self)
+
+    fn write_to[W: Writer](self, mut writer: W):
+        """
+        Formats this ArrayData to the provided Writer.
+
+        Parameters:
+            W: A type conforming to the Writable trait.
+
+        Args:
+            writer: The object to write to.
+        """
+
+        for i in range(self.length):
+            if self.is_valid(i):
+                writer.write(self.buffers[0][].unsafe_get(i))
+            else:
+                writer.write("-")
+            writer.write(" ")
+            if i > 10:
+                break
