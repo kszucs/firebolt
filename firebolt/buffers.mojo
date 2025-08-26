@@ -348,7 +348,9 @@ struct Bitmap(Movable, Writable):
             buffer_value = buffer_value & ~mask
         self.buffer.unsafe_set[DType.uint8](byte_index, buffer_value)
 
-    fn unsafe_range_set(mut self, start: Int, length: Int, value: Bool) -> None:
+    fn unsafe_range_set[
+        T: Intable, U: Intable, //
+    ](mut self, start: T, length: U, value: Bool) -> None:
         """Set a range of bits in the bitmap to the specified value.
 
         Args:
@@ -358,10 +360,12 @@ struct Bitmap(Movable, Writable):
         """
 
         # Process the partial byte at the ends.
-        var start_index = start // 8
-        var bit_pos_start = start % 8
-        var end_index = (start + length) // 8
-        var bit_pos_end = (start + length) % 8
+        var start_int = Int(start)
+        var end_int = start_int + Int(length)
+        var start_index = start_int // 8
+        var bit_pos_start = start_int % 8
+        var end_index = end_int // 8
+        var bit_pos_end = end_int % 8
 
         if bit_pos_start != 0 or bit_pos_end != 0:
             if start_index == end_index:

@@ -250,8 +250,12 @@ struct DataType(Copyable, EqualityComparable, Movable, Stringable):
             return "int8"
         elif self.code == INT16:
             return "int16"
+        elif self.code == INT32:
+            return "int32"
+        elif self.code == STRUCT:
+            return "struct"
         else:
-            return "unknown"
+            return "unknown " + String(self.code)
 
     fn is_bool(self) -> Bool:
         return self.code == BOOL

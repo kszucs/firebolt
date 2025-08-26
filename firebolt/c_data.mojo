@@ -1,7 +1,10 @@
-from memory import UnsafePointer, ArcPointer
+from sys.ffi import external_call, DLHandle, c_char
+from memory import UnsafePointer, ArcPointer, memcpy
+from sys import sizeof
 
 import math
 from python import Python, PythonObject
+from python._cpython import CPython, PyObjectPtr
 from sys.ffi import c_char
 
 from .dtypes import *
@@ -116,9 +119,10 @@ struct CArrowSchema(Copyable, Movable):
     fn from_field(field: Field) -> CArrowSchema:
         var flags: Int64 = 0  # TODO: nullable
 
+        var field_name = field.name
         return CArrowSchema(
             format="".unsafe_cstr_ptr(),
-            name=field.name.unsafe_cstr_ptr(),
+            name=field_name.unsafe_cstr_ptr(),
             metadata="".unsafe_cstr_ptr(),
             flags=flags,
             n_children=0,
@@ -173,7 +177,7 @@ struct CArrowSchema(Copyable, Movable):
                 fields.append(self.children[i][].to_field())
             return struct_(fields)
         else:
-            raise Error("Unknown format")
+            raise Error("Unknown format: " + fmt)
 
     fn to_field(self) raises -> Field:
         var name = StringSlice[__origin_of(self)](
@@ -181,7 +185,7 @@ struct CArrowSchema(Copyable, Movable):
         )
         var dtype = self.to_dtype()
         var nullable = self.flags & ARROW_FLAG_NULLABLE
-        return Field(String(name), dtype, nullable == 0)
+        return Field(String(name), dtype, nullable != 0)
 
 
 @fieldwise_init
@@ -213,9 +217,10 @@ struct CArrowArray(Copyable, Movable):
             # bitmaps are allowed to be nullptrs by the specification, in this
             # case we allocate a new buffer to hold the null bitmap
             bitmap = ArcPointer(Bitmap.alloc(self.length))
+            bitmap[].unsafe_range_set(0, self.length, True)
 
         var buffers = List[ArcPointer[Buffer]]()
-        if dtype.is_numeric():
+        if dtype.is_numeric() or dtype == bool_:
             var buffer = Buffer.view(self.buffers[1], self.length, dtype.native)
             buffers.append(ArcPointer(buffer^))
         elif dtype == string:
@@ -231,8 +236,11 @@ struct CArrowArray(Copyable, Movable):
                 self.buffers[1], self.length + 1, DType.uint32
             )
             buffers.append(ArcPointer(offsets^))
+        elif dtype.is_struct():
+            # Since the children buffers are handled below there is nothing to do here.
+            pass
         else:
-            raise Error("Unknown dtype")
+            raise Error("Unknown dtype: " + String(dtype))
 
         var children = List[ArcPointer[ArrayData]]()
         for i in range(self.n_children):
@@ -247,3 +255,102 @@ struct CArrowArray(Copyable, Movable):
             buffers=buffers,
             children=children,
         )
+
+
+# See: https://arrow.apache.org/docs/format/CStreamInterface.html
+
+# We are getting some compilation errors with many "recursive" function definitions, i.e. functions in
+# CArrowArrayStream that take a CArrowArrayStream as an argument. As a workaround we define twp versions
+# of the CArrowArrayStream:
+#   - CArrowArrayStreamOpaque defines the overall shape of the struct using opaque function prototypes.
+#   - CArrowArrayStream defines the struct with the actual function signatures defined in terms of the Opaque variant above.
+#
+# An alternative could be to define `get_schema` and friends as methods on the struct and self would have the right type.
+# It is not clear if the resulting ABI would be guaranteed to be compatible with C.
+alias AnyFunction = fn (OpaquePointer) -> UInt
+
+
+@fieldwise_init
+@register_passable("trivial")
+struct CArrowArrayStreamOpaque(Copyable, Movable):
+    # Callbacks providing stream functionality
+    var get_schema: AnyFunction
+    var get_next: AnyFunction
+    var get_last_error: AnyFunction
+
+    # Release callback
+    var release: AnyFunction
+
+    # Opaque producer-specific data
+    var private_data: OpaquePointer
+
+
+@fieldwise_init
+@register_passable("trivial")
+struct CArrowArrayStream(Copyable, Movable):
+    # Callbacks providing stream functionality
+    var get_schema: fn (
+        stream: UnsafePointer[CArrowArrayStreamOpaque],
+        out_schema: UnsafePointer[CArrowSchema],
+    ) -> UInt
+    var get_next: fn (
+        stream: UnsafePointer[CArrowArrayStreamOpaque],
+        out_array: UnsafePointer[CArrowArray],
+    ) -> UInt
+    var get_last_error: fn (
+        stream: UnsafePointer[CArrowArrayStreamOpaque]
+    ) -> UnsafePointer[c_char]
+
+    # Release callback
+    var release: fn (stream: UnsafePointer[CArrowArrayStreamOpaque]) -> None
+
+    # Opaque producer-specific data
+    var private_data: OpaquePointer
+
+
+@fieldwise_init
+struct ArrowArrayStream(Copyable, Movable):
+    """Provide an fiendly interface to the C Arrow Array Stream."""
+
+    var c_arrow_array_stream: UnsafePointer[CArrowArrayStream]
+
+    @staticmethod
+    fn from_pyarrow(
+        pyobj: PythonObject, cpython: CPython
+    ) raises -> ArrowArrayStream:
+        """Ask a PyArrow table for its arrow array stream interface."""
+        var stream = pyobj.__arrow_c_stream__()
+        var ptr = cpython.PyCapsule_GetPointer(
+            stream.steal_data(), "arrow_array_stream"
+        )
+        if not ptr:
+            raise Error("Failed to get the arrow array stream pointer")
+
+        var alt = ptr.bitcast[CArrowArrayStream]()
+        return ArrowArrayStream(alt)
+
+    fn _opaque_array_stream(self) -> UnsafePointer[CArrowArrayStreamOpaque]:
+        """Return the arrow array as its opaque C variant."""
+        return self.c_arrow_array_stream.bitcast[CArrowArrayStreamOpaque]()
+
+    fn c_schema(self) raises -> CArrowSchema:
+        """Return the C variant of the Arrow Schema."""
+        var schema = UnsafePointer[CArrowSchema].alloc(1)
+        var function = self.c_arrow_array_stream[].get_schema
+        var err = function(self._opaque_array_stream(), schema)
+        if err != 0:
+            raise Error("Failed to get schema " + String(err))
+        if not schema:
+            raise Error("The schema pointer is null")
+        return schema.take_pointee()
+
+    fn c_next(self) raises -> CArrowArray:
+        """Return the next buffer in the streeam."""
+        var arrow_array = UnsafePointer[CArrowArray].alloc(1)
+        var function = self.c_arrow_array_stream[].get_next
+        var err = function(self._opaque_array_stream(), arrow_array)
+        if err != 0:
+            raise Error("Failed to get next arrow array " + String(err))
+        if not arrow_array:
+            raise Error("The arrow array pointer is null")
+        return arrow_array.take_pointee()
