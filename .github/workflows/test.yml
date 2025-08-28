@@ -19,4 +19,6 @@ jobs:
     - name: checks
       run: pixi run fmt
     - name: tests
-      run: pixi run test
+      run: |
+        pixi run test
+        pixi run package
