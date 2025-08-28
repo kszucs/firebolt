@@ -70,33 +70,32 @@ struct ListArray(Array):
 
 struct StructArray(Array):
     var data: ArrayData
-    var bitmap: ArcPointer[Buffer]
-    var fields: List[ArcPointer[ArrayData]]
+    var bitmap: ArcPointer[Bitmap]
+    var fields: List[Field]
     var capacity: Int
 
-    fn __init__(out self, fields: List[Array], capacity: Int = 0):
-        var field_datas = List[ArcPointer[ArrayData]]()
-        var field_dtypes = List[DataType]()
-        for field in fields:
-            var data = field.as_data()
-            field_dtypes.append(data.dtype)
-            field_datas.append(data^)
+    fn __init__(
+        out self,
+        var fields: List[Field],
+        capacity: Int = 0,
+    ):
+        var bitmap = Bitmap.alloc(capacity)
+        bitmap.unsafe_range_set(0, capacity, True)
 
-        var bitmap = Buffer.alloc[DType.bool](capacity)
-        var struct_dtype = struct_(field_dtypes)
+        var struct_dtype = struct_(fields)
 
         self.capacity = capacity
-        self.bitmap = bitmap^
-        self.fields = field_datas^
+        self.bitmap = ArcPointer(bitmap^)
+        self.fields = fields^
         self.data = ArrayData(
             dtype=struct_dtype,
             length=0,
             bitmap=self.bitmap,
-            buffers=List(),
-            children=self.fields,
+            buffers=List[ArcPointer[Buffer]](),
+            children=List[ArcPointer[ArrayData]](),
         )
 
-    fn __moveinit__(out self, var existing: Self):
+    fn __moveinit__(out self, deinit existing: Self):
         self.data = existing.data^
         self.bitmap = existing.bitmap^
         self.fields = existing.fields^

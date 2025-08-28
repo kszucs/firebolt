@@ -131,7 +131,7 @@ struct PrimitiveArray[T: DataType](Array):
         self.data.length += 1
 
     @staticmethod
-    fn nulls[T: DataType](size: Int) -> PrimitiveArray[T]:
+    fn nulls[T: DataType](size: Int) raises -> PrimitiveArray[T]:
         """Creates a new PrimitiveArray filled with null values."""
         var bitmap = Bitmap.alloc(size)
         bitmap.unsafe_range_set(0, size, False)
@@ -140,13 +140,10 @@ struct PrimitiveArray[T: DataType](Array):
             data=ArrayData(
                 dtype=T,
                 length=size,
-                bitmap=bitmap,
-                buffers=List(buffer),
+                bitmap=ArcPointer(bitmap^),
+                buffers=List(ArcPointer(buffer^)),
                 children=List[ArcPointer[ArrayData]](),
             ),
-            bitmap=bitmap,
-            buffer=buffer,
-            capacity=size,
         )
 
     fn append(mut self, value: Self.scalar):

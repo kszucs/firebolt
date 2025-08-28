@@ -12,13 +12,10 @@ from .arrays import *
 
 alias ARROW_FLAG_NULLABLE = 2
 
-
-alias CSchemaReleaseFunction = fn (
-    schema: UnsafePointer[CArrowSchema]
-) -> NoneType
-alias CArrayReleaseFunction = fn (
-    schema: UnsafePointer[CArrowArray]
-) -> NoneType
+# This type of the function argument is really CArrowSchema but we are getting errors with: recursive reference to declaration.
+alias CSchemaReleaseFunction = fn (schema: UnsafePointer[UInt64]) -> NoneType
+# This type of the function argument is really CArrowArray but we are getting errors with: recursive reference to declaration.
+alias CArrayReleaseFunction = fn (schema: UnsafePointer[UInt64]) -> NoneType
 
 
 @fieldwise_init
@@ -34,10 +31,12 @@ struct CArrowSchema(Copyable, Movable):
     var release: UnsafePointer[CSchemaReleaseFunction]
     var private_data: UnsafePointer[NoneType]
 
-    # fn __del__(owned self):
-    #     var this = UnsafePointer.address_of(self)
-    #     if self.release:
-    #         self.release[](this)
+    fn __del__(deinit self):
+        var this = UnsafePointer(to=self).bitcast[UInt64]()
+        if self.release:
+            # Calling the function leads to a crash.
+            # self.release[](this)
+            pass
 
     @staticmethod
     fn from_pyarrow(pyobj: PythonObject) raises -> CArrowSchema:
@@ -47,7 +46,7 @@ struct CArrowSchema(Copyable, Movable):
 
     fn to_pyarrow(self) raises -> PythonObject:
         var pa = Python.import_module("pyarrow")
-        var ptr = UnsafePointer[CArrowSchema].address_of(self)
+        var ptr = UnsafePointer(to=self)
         return pa.Schema._import_from_c(Int(ptr))
 
     @staticmethod
@@ -258,9 +257,11 @@ struct CArrowArray(Copyable, Movable):
 
 
 # See: https://arrow.apache.org/docs/format/CStreamInterface.html
-
+#
 # We are getting some compilation errors with many "recursive" function definitions, i.e. functions in
-# CArrowArrayStream that take a CArrowArrayStream as an argument. As a workaround we define twp versions
+# CArrowArrayStream that take a CArrowArrayStream as an argument. The error is: recursive reference to declaration.
+#
+# As a workaround we define twp versions
 # of the CArrowArrayStream:
 #   - CArrowArrayStreamOpaque defines the overall shape of the struct using opaque function prototypes.
 #   - CArrowArrayStream defines the struct with the actual function signatures defined in terms of the Opaque variant above.
