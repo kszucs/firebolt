@@ -8,6 +8,7 @@ version = "0.1.0"
 [tasks]
 test = "mojo test firebolt -I ."
 fmt = "mojo format firebolt"
+package = "mojo package firebolt -o package/firebolt.mojopkg"
 
 [dependencies]
 mojo = ">=25.6.0.dev2025081914,<26"

@@ -162,11 +162,12 @@ cython_debug/
 #.idea/
 
 
-# pixi environments
-.pixi
 # magic environments
 .magic
 
 # pixi environments
 .pixi
 *.egg-info
+
+# Mojo build files
+kgen.trace.*
