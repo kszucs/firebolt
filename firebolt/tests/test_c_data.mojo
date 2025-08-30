@@ -18,6 +18,9 @@ def test_schema_from_pyarrow():
     assert_equal(schema.fields[0].dtype, int32)
     assert_equal(schema.fields[1].name, "string_field")
     assert_equal(schema.fields[1].dtype, string)
+    var writer = String()
+    writer.write(c_schema)
+    assert_equal(writer, 'CArrowSchema(name="", format="+s", n_children=2)')
 
 
 def test_primitive_array_from_pyarrow():

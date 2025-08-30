@@ -1,3 +1,5 @@
+from io.write import Writable, Writer
+
 # The following enum codes are copied from the C++ implementation of Arrow
 
 # A NULL type having no physical storage
@@ -141,7 +143,9 @@ alias LIST_VIEW = 41
 alias LARGE_LIST_VIEW = 42
 
 
-struct Field(Copyable, EqualityComparable, Movable):
+struct Field(
+    Copyable, EqualityComparable, Movable, Representable, Stringable, Writable
+):
     var name: String
     var dtype: DataType
     var nullable: Bool
@@ -163,8 +167,38 @@ struct Field(Copyable, EqualityComparable, Movable):
     fn __ne__(self, other: Field) -> Bool:
         return not self == other
 
+    fn write_to[W: Writer](self, mut writer: W):
+        """
+        Formats this Field to the provided Writer.
 
-struct DataType(Copyable, EqualityComparable, Movable, Stringable):
+        Parameters:
+            W: A type conforming to the Writable trait.
+
+        Args:
+            writer: The object to write to.
+        """
+        writer.write("Field(")
+        writer.write('name="')
+        writer.write(self.name)
+        writer.write('", ')
+        writer.write("dtype=")
+        writer.write(self.dtype)
+        writer.write(", ")
+        writer.write("nullable=")
+        writer.write(self.nullable)
+        writer.write(", ")
+        writer.write(")")
+
+    fn __str__(self) -> String:
+        return String.write(self)
+
+    fn __repr__(self) -> String:
+        return String.write(self)
+
+
+struct DataType(
+    Copyable, EqualityComparable, Movable, Representable, Stringable, Writable
+):
     var code: UInt8
     var native: DType
     var fields: List[Field]
@@ -241,21 +275,40 @@ struct DataType(Copyable, EqualityComparable, Movable, Stringable):
     fn __ne__(self, other: DataType) -> Bool:
         return not self == other
 
-    fn __str__(self) -> String:
+    fn write_to[W: Writer](self, mut writer: W):
+        """
+        Formats this DataType to the provided Writer.
+
+        Parameters:
+            W: A type conforming to the Writable trait.
+
+        Args:
+            writer: The object to write to.
+        """
+        writer.write("DataType(code=")
         if self.code == NA:
-            return "null"
+            writer.write("null")
         elif self.code == BOOL:
-            return "bool"
+            writer.write("bool")
         elif self.code == INT8:
-            return "int8"
+            writer.write("int8")
         elif self.code == INT16:
-            return "int16"
+            writer.write("int16")
         elif self.code == INT32:
-            return "int32"
+            writer.write("int32")
+        elif self.code == INT64:
+            writer.write("int64")
         elif self.code == STRUCT:
-            return "struct"
+            writer.write("struct")
         else:
-            return "unknown " + String(self.code)
+            writer.write("unknown " + String(self.code))
+        writer.write(")")
+
+    fn __str__(self) -> String:
+        return String.write(self)
+
+    fn __repr__(self) -> String:
+        return String.write(self)
 
     fn is_bool(self) -> Bool:
         return self.code == BOOL

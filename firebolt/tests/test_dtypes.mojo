@@ -14,6 +14,18 @@ def test_list_type():
     assert_false(dt.list_(dt.int64) == dt.list_(dt.int32))
 
 
+def test_field():
+    var field = dt.Field("a", dt.int64)
+    var writer = String()
+    writer.write(field)
+    var expected = (
+        'Field(name="a", dtype=DataType(code=int64), nullable=False, )'
+    )
+    assert_equal(writer, expected)
+    assert_equal(String(field), expected)
+    assert_equal(field.__repr__(), expected)
+
+
 def test_struct_type():
     s1 = dt.struct_(dt.Field("a", dt.int64), dt.Field("b", dt.int32))
     s2 = dt.struct_(dt.Field("a", dt.int64), dt.Field("b", dt.int32))
