@@ -6,6 +6,7 @@ import math
 from python import Python, PythonObject
 from python._cpython import CPython, PyObjectPtr
 from sys.ffi import c_char
+from io.write import Writable, Writer
 
 from .dtypes import *
 from .arrays import *
@@ -19,7 +20,7 @@ alias CArrayReleaseFunction = fn (schema: UnsafePointer[UInt64]) -> NoneType
 
 
 @fieldwise_init
-struct CArrowSchema(Copyable, Movable):
+struct CArrowSchema(Copyable, Movable, Representable, Stringable, Writable):
     var format: UnsafePointer[c_char]
     var name: UnsafePointer[c_char]
     var metadata: UnsafePointer[c_char]
@@ -185,6 +186,37 @@ struct CArrowSchema(Copyable, Movable):
         var dtype = self.to_dtype()
         var nullable = self.flags & ARROW_FLAG_NULLABLE
         return Field(String(name), dtype, nullable != 0)
+
+    fn write_to[W: Writer](self, mut writer: W):
+        """
+        Formats this CArrowSchema to the provided Writer.
+
+        Parameters:
+            W: A type conforming to the Writable trait.
+
+        Args:
+            writer: The object to write to.
+        """
+        writer.write("CArrowSchema(")
+        writer.write('name="')
+        writer.write(StringSlice(unsafe_from_utf8_ptr=self.name))
+        writer.write('", ')
+        writer.write('format="')
+        writer.write(StringSlice(unsafe_from_utf8_ptr=self.format))
+        writer.write('", ')
+        if self.metadata:
+            writer.write('metadata="')
+            writer.write(self.metadata)
+            writer.write('", ')
+        writer.write("n_children=")
+        writer.write(self.n_children)
+        writer.write(")")
+
+    fn __str__(self) -> String:
+        return String.write(self)
+
+    fn __repr__(self) -> String:
+        return String.write(self)
 
 
 @fieldwise_init
