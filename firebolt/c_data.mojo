@@ -1,6 +1,6 @@
 from sys.ffi import external_call, DLHandle, c_char
 from memory import UnsafePointer, ArcPointer, memcpy
-from sys import sizeof
+from sys import size_of
 
 import math
 from python import Python, PythonObject
