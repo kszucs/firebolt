@@ -11,7 +11,7 @@ fmt = "mojo format firebolt"
 package = "mojo package firebolt -o package/firebolt.mojopkg"
 
 [dependencies]
-mojo = ">=25.6.0.dev2025081914,<26"
+mojo = ">=25.6.0.dev2025083105,<26"
 
 [pypi-dependencies]
 pyarrow = ">=19.0.1, <21"

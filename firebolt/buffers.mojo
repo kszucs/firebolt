@@ -1,5 +1,6 @@
 from memory import UnsafePointer, memset_zero, memcpy, ArcPointer, Span, memset
-from sys.info import sizeof, simdbytewidth
+from sys.info import simd_byte_width
+from sys import size_of
 import math
 from bit import pop_count, count_trailing_zeros
 
@@ -9,11 +10,11 @@ fn _required_bytes(length: Int, T: DType) -> Int:
     if T is DType.bool:
         size = math.ceildiv(length, 8)
     else:
-        size = length * T.sizeof()
+        size = length * T.size_of()
     return math.align_up(size, 64)
 
 
-alias simd_width = simdbytewidth()
+alias simd_width = simd_byte_width()
 
 alias simd_widths = (simd_width, simd_width // 2, 1)
 
@@ -86,7 +87,7 @@ struct Buffer(Movable):
         if T is DType.bool:
             return self.size * 8
         else:
-            return self.size // sizeof[T]()
+            return self.size // size_of[T]()
 
     @always_inline
     fn unsafe_get[T: DType = DType.uint8](self, index: Int) -> Scalar[T]:

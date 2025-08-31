@@ -1,6 +1,7 @@
 from memory import ArcPointer
 from ..buffers import Buffer, Bitmap
 from ..dtypes import *
+from sys import size_of
 
 
 fn drop_nulls[
@@ -43,7 +44,7 @@ fn drop_nulls[
         memcpy(
             buffer[].offset(start),
             buffer[].offset(end_nulls),
-            values_len * sizeof[T](),
+            values_len * size_of[T](),
         )
         # Adjust the bitmp.
         var new_values_start = start
