@@ -33,3 +33,23 @@ def test_list_bool_array():
     bools.append(as_bool_array_scalar(True))
     lists.unsafe_append(True)
     assert_equal(len(lists), 1)
+
+
+def test_struct_array():
+    var fields = List[Field](
+        Field("id", int64),
+        Field("name", string),
+        Field("active", bool_),
+    )
+
+    var struct_arr = StructArray(fields, capacity=10)
+    assert_equal(len(struct_arr), 0)
+    assert_equal(struct_arr.capacity, 10)
+
+    var data = struct_arr.as_data()
+    assert_equal(data.length, 0)
+    assert_true(data.dtype.is_struct())
+    assert_equal(len(data.dtype.fields), 3)
+    assert_equal(data.dtype.fields[0].name, "id")
+    assert_equal(data.dtype.fields[1].name, "name")
+    assert_equal(data.dtype.fields[2].name, "active")

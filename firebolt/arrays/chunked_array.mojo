@@ -47,6 +47,7 @@ struct ChunkedArray:
             bitmap=bitmap,
             buffers=List[ArcPointer[Buffer]](),
             children=List[ArcPointer[ArrayData]](),
+            offset=0,
         )
         var start = 0
         for chunk in self.chunks:

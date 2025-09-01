@@ -20,9 +20,10 @@ struct ArrayData(Copyable, Movable, Writable):
     var bitmap: ArcPointer[Bitmap]
     var buffers: List[ArcPointer[Buffer]]
     var children: List[ArcPointer[ArrayData]]
+    var offset: Int
 
     fn is_valid(self, index: Int) -> Bool:
-        return self.bitmap[].unsafe_get(index)
+        return self.bitmap[].unsafe_get(index + self.offset)
 
     fn as_primitive[T: DataType](self) raises -> PrimitiveArray[T]:
         return PrimitiveArray[T](self)
@@ -76,7 +77,7 @@ struct ArrayData(Copyable, Movable, Writable):
 
         for i in range(self.length):
             if self.is_valid(i):
-                writer.write(self.buffers[0][].unsafe_get(i))
+                writer.write(self.buffers[0][].unsafe_get(i + self.offset))
             else:
                 writer.write("-")
             writer.write(" ")

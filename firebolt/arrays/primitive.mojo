@@ -42,8 +42,8 @@ fn drop_nulls[
 
         # Compact the data.
         memcpy(
-            buffer[].offset(start),
-            buffer[].offset(end_nulls),
+            buffer[].get_ptr_at(start),
+            buffer[].get_ptr_at(end_nulls),
             values_len * size_of[T](),
         )
         # Adjust the bitmp.
@@ -70,8 +70,9 @@ struct PrimitiveArray[T: DataType](Array):
     var bitmap: ArcPointer[Bitmap]
     var buffer: ArcPointer[Buffer]
     var capacity: Int
+    var offset: Int
 
-    fn __init__(out self, var data: ArrayData) raises:
+    fn __init__(out self, var data: ArrayData, offset: Int = 0) raises:
         # TODO(kszucs): put a dtype constraint here
         if data.dtype != T:
             raise Error("Unexpected dtype")
@@ -82,9 +83,11 @@ struct PrimitiveArray[T: DataType](Array):
         self.bitmap = data.bitmap
         self.buffer = data.buffers[0]
         self.capacity = data.length
+        self.offset = offset
 
-    fn __init__(out self, capacity: Int = 0):
+    fn __init__(out self, capacity: Int = 0, offset: Int = 0):
         self.capacity = capacity
+        self.offset = offset
         self.bitmap = ArcPointer(Bitmap.alloc(capacity))
         self.buffer = ArcPointer(Buffer.alloc[T.native](capacity))
         self.data = ArrayData(
@@ -93,6 +96,7 @@ struct PrimitiveArray[T: DataType](Array):
             bitmap=self.bitmap,
             buffers=List(self.buffer),
             children=List[ArcPointer[ArrayData]](),
+            offset=self.offset,
         )
 
     fn __moveinit__(out self, deinit existing: Self):
@@ -100,6 +104,7 @@ struct PrimitiveArray[T: DataType](Array):
         self.bitmap = existing.bitmap^
         self.buffer = existing.buffer^
         self.capacity = existing.capacity
+        self.offset = existing.offset
 
     fn as_data(self) -> ArrayData:
         return self.data
@@ -115,16 +120,16 @@ struct PrimitiveArray[T: DataType](Array):
 
     @always_inline
     fn is_valid(self, index: Int) -> Bool:
-        return self.bitmap[].unsafe_get(index)
+        return self.bitmap[].unsafe_get(index + self.offset)
 
     @always_inline
     fn unsafe_get(self, index: Int) -> Self.scalar:
-        return self.buffer[].unsafe_get[T.native](index)
+        return self.buffer[].unsafe_get[T.native](index + self.offset)
 
     @always_inline
     fn unsafe_set(mut self, index: Int, value: Self.scalar):
-        self.bitmap[].unsafe_set(index, True)
-        self.buffer[].unsafe_set[T.native](index, value)
+        self.bitmap[].unsafe_set(index + self.offset, True)
+        self.buffer[].unsafe_set[T.native](index + self.offset, value)
 
     @always_inline
     fn unsafe_append(mut self, value: Self.scalar):
@@ -144,6 +149,7 @@ struct PrimitiveArray[T: DataType](Array):
                 bitmap=ArcPointer(bitmap^),
                 buffers=List(ArcPointer(buffer^)),
                 children=List[ArcPointer[ArrayData]](),
+                offset=0,
             ),
         )
 

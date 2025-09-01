@@ -285,6 +285,7 @@ struct CArrowArray(Copyable, Movable):
             bitmap=bitmap,
             buffers=buffers,
             children=children,
+            offset=Int(self.offset),
         )
 
 
