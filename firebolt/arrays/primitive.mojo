@@ -179,6 +179,41 @@ struct PrimitiveArray[T: DataType](Array):
         var valid_count = self.bitmap[].buffer.bit_count()
         return self.data.length - valid_count
 
+    fn write_to[W: Writer](self, mut writer: W):
+        """
+        Formats this PrimitiveArray to the provided Writer.
+
+        Parameters:
+            W: A type conforming to the Writable trait.
+
+        Args:
+            writer: The object to write to.
+        """
+
+        writer.write("PrimitiveArray( dtype=")
+        writer.write(Self.dtype)
+        writer.write(", offset=")
+        writer.write(self.offset)
+        writer.write(", capacity=")
+        writer.write(self.capacity)
+        writer.write(", buffer=[")
+        for i in range(self.capacity):
+            if self.is_valid(i):
+                writer.write(self.buffer[].unsafe_get(i + self.offset))
+            else:
+                writer.write("NULL")
+            writer.write(", ")
+            if i > 10:
+                writer.write("...")
+                break
+        writer.write("])")
+
+    fn __str__(self) -> String:
+        return String.write(self)
+
+    fn __repr__(self) -> String:
+        return String.write(self)
+
 
 alias BoolArray = PrimitiveArray[bool_]
 alias Int8Array = PrimitiveArray[int8]

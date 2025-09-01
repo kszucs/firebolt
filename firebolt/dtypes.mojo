@@ -290,6 +290,8 @@ struct DataType(
             writer.write("null")
         elif self.code == BOOL:
             writer.write("bool")
+        elif self.code == UINT8:
+            writer.write("uint8")
         elif self.code == INT8:
             writer.write("int8")
         elif self.code == INT16:

@@ -68,6 +68,28 @@ struct ListArray(Array):
         )
         self.data.length += 1
 
+    fn write_to[W: Writer](self, mut writer: W):
+        """
+        Formats this ListArray to the provided Writer.
+
+        Parameters:
+            W: A type conforming to the Writable trait.
+
+        Args:
+            writer: The object to write to.
+        """
+
+        writer.write("ListArray(")
+        writer.write("length=")
+        writer.write(self.data.length)
+        writer.write(")")
+
+    fn __str__(self) -> String:
+        return String.write(self)
+
+    fn __repr__(self) -> String:
+        return String.write(self)
+
 
 struct StructArray(Array):
     var data: ArrayData
@@ -108,3 +130,25 @@ struct StructArray(Array):
 
     fn as_data(self) -> ArrayData:
         return self.data
+
+    fn write_to[W: Writer](self, mut writer: W):
+        """
+        Formats this StructArray to the provided Writer.
+
+        Parameters:
+            W: A type conforming to the Writable trait.
+
+        Args:
+            writer: The object to write to.
+        """
+
+        writer.write("StructArray(")
+        writer.write("length=")
+        writer.write(self.data.length)
+        writer.write(")")
+
+    fn __str__(self) -> String:
+        return String.write(self)
+
+    fn __repr__(self) -> String:
+        return String.write(self)
