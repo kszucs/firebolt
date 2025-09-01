@@ -42,6 +42,7 @@ struct ListArray(Array):
             bitmap=self.bitmap,
             buffers=List(self.offsets),
             children=List(self.values),
+            offset=0,
         )
 
     fn __moveinit__(out self, deinit existing: Self):
@@ -93,6 +94,7 @@ struct StructArray(Array):
             bitmap=self.bitmap,
             buffers=List[ArcPointer[Buffer]](),
             children=List[ArcPointer[ArrayData]](),
+            offset=0,
         )
 
     fn __moveinit__(out self, deinit existing: Self):

@@ -40,6 +40,7 @@ struct StringArray(Array):
             bitmap=self.bitmap,
             buffers=List(self.offsets, self.values),
             children=List[ArcPointer[ArrayData]](),
+            offset=0,
         )
 
     fn __moveinit__(out self, deinit existing: Self):
@@ -74,14 +75,14 @@ struct StringArray(Array):
         self.bitmap[].unsafe_set(index, True)
         self.offsets[].unsafe_set[DType.uint32](index + 1, next_offset)
         self.values[].grow[DType.uint8](next_offset)
-        var dst_address = self.values[].offset(Int(last_offset))
+        var dst_address = self.values[].get_ptr_at(Int(last_offset))
         var src_address = value.unsafe_ptr()
         memcpy(dst_address, src_address, len(value))
 
     fn unsafe_get(self, index: UInt) -> StringSlice[__origin_of(self)]:
         var start_offset = self.offsets[].unsafe_get[DType.uint32](index)
         var end_offset = self.offsets[].unsafe_get[DType.uint32](index + 1)
-        var address = self.values[].offset(Int(start_offset))
+        var address = self.values[].get_ptr_at(Int(start_offset))
         var length = UInt(Int(end_offset - start_offset))
         return StringSlice[__origin_of(self)](ptr=address, length=length)
 
@@ -96,6 +97,6 @@ struct StringArray(Array):
                 " length"
             )
 
-        var dst_address = self.values[].offset(Int(start_offset))
+        var dst_address = self.values[].get_ptr_at(Int(start_offset))
         var src_address = value.unsafe_ptr()
         memcpy(dst_address, src_address, length)

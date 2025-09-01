@@ -72,3 +72,84 @@ def test_drop_null() -> None:
     assert_bitmap_set(
         primitive_array.bitmap[], List[Int](0, 1, 2, 3, 4), "after drop"
     )
+
+
+def test_primitive_array_with_offset():
+    """Test PrimitiveArray with offset functionality."""
+    # Create a regular array first
+    var arr = Int32Array(10)
+    arr.unsafe_set(0, 100)
+    arr.unsafe_set(1, 200)
+    arr.unsafe_set(2, 300)
+    arr.unsafe_set(3, 400)
+    arr.unsafe_set(4, 500)
+
+    # Default offset should be 0
+    assert_equal(arr.offset, 0)
+    assert_equal(arr.unsafe_get(0), 100)
+    assert_equal(arr.unsafe_get(1), 200)
+
+    # Create array with offset
+    var arr_data = arr.as_data()
+    var arr_with_offset = PrimitiveArray[int32](arr_data^, offset=2)
+    assert_equal(arr_with_offset.offset, 2)
+
+    # Test that offset affects get operations
+    assert_equal(arr_with_offset.unsafe_get(0), 300)  # Should get arr[2]
+    assert_equal(arr_with_offset.unsafe_get(1), 400)  # Should get arr[3]
+    assert_equal(arr_with_offset.unsafe_get(2), 500)  # Should get arr[4]
+
+    # Test that offset affects set operations
+    arr_with_offset.unsafe_set(3, 999)  # Should set arr[5]
+    assert_equal(arr.unsafe_get(5), 999)
+
+
+def test_primitive_array_moveinit_with_offset():
+    """Test __moveinit__ preserves offset."""
+    var arr = Int16Array(5, offset=3)
+    arr.unsafe_set(0, 123)
+
+    var moved_arr = arr^
+    assert_equal(moved_arr.offset, 3)
+    assert_equal(moved_arr.unsafe_get(0), 123)
+
+
+def test_primitive_array_constructor_with_offset():
+    """Test PrimitiveArray constructor with offset parameter."""
+    var arr1 = Int8Array(10)  # Default offset=0
+    assert_equal(arr1.offset, 0)
+
+    var arr2 = Int8Array(10, offset=5)  # Explicit offset
+    assert_equal(arr2.offset, 5)
+
+    # Test that data.offset is also set correctly
+    assert_equal(arr2.data.offset, 5)
+
+
+def test_primitive_array_offset_with_validity():
+    """Test that offset works correctly with validity bitmap."""
+    var arr = UInt8Array(10, offset=1)
+
+    # Set some values with validity
+    arr.unsafe_set(0, 42)  # This should set buffer[1] and bitmap[1]
+    arr.unsafe_set(1, 43)  # This should set buffer[2] and bitmap[2]
+
+    # Verify values are accessible through offset
+    assert_equal(arr.unsafe_get(0), 42)
+    assert_equal(arr.unsafe_get(1), 43)
+
+    # Verify bitmap is also offset correctly
+    assert_true(arr.is_valid(0))  # Should check bitmap[1]
+    assert_true(arr.is_valid(1))  # Should check bitmap[2]
+
+
+def test_primitive_array_nulls_with_offset():
+    """Test PrimitiveArray.nulls static method creates array with default offset.
+    """
+    var null_arr = Int64Array.nulls[int64](5)
+    assert_equal(null_arr.offset, 0)
+    assert_equal(null_arr.data.offset, 0)
+
+    # All elements should be invalid (null)
+    for i in range(5):
+        assert_false(null_arr.is_valid(i))
