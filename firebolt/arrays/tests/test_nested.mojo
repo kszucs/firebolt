@@ -7,14 +7,13 @@ from firebolt.test_fixtures.bool_array import as_bool_array_scalar
 
 
 def test_list_int_array():
-    var ints = Int64Array()
-    var lists = ListArray(ints)
-    assert_equal(lists.data.dtype, list_(int64))
-
+    var ints = Int64Array(capacity=3)
     ints.append(1)
     ints.append(2)
     ints.append(3)
-    lists.unsafe_append(True)
+    var lists = ListArray(ints^)
+    assert_equal(lists.data.dtype, list_(int64))
+
     assert_equal(len(lists), 1)
 
     var data = lists.as_data()
@@ -23,15 +22,18 @@ def test_list_int_array():
     var arr = data.as_list()
     assert_equal(len(arr), 1)
 
+    var first_value = lists.unsafe_get(0)
+    assert_equal(first_value.__str__().strip(), "1 2 3")
+
 
 def test_list_bool_array():
     var bools = BoolArray()
-    var lists = ListArray(bools)
 
     bools.append(as_bool_array_scalar(True))
     bools.append(as_bool_array_scalar(False))
     bools.append(as_bool_array_scalar(True))
-    lists.unsafe_append(True)
+
+    var lists = ListArray(bools^)
     assert_equal(len(lists), 1)
 
 
@@ -57,13 +59,13 @@ def test_struct_array():
 
 def test_list_array_str_repr():
     var ints = Int64Array()
-    var lists = ListArray(ints)
+    var lists = ListArray(ints^)
 
     var str_repr = lists.__str__()
     var repr_repr = lists.__repr__()
 
-    assert_equal(str_repr, "ListArray(length=0)")
-    assert_equal(repr_repr, "ListArray(length=0)")
+    assert_equal(str_repr, "ListArray(length=1)")
+    assert_equal(repr_repr, "ListArray(length=1)")
     assert_equal(str_repr, repr_repr)
 
 
@@ -81,3 +83,8 @@ def test_struct_array_str_repr():
     assert_equal(str_repr, "StructArray(length=0)")
     assert_equal(repr_repr, "StructArray(length=0)")
     assert_equal(str_repr, repr_repr)
+
+
+fn main() raises -> None:
+    """Main entry point to get stdout during testing."""
+    test_list_int_array()
