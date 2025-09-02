@@ -100,3 +100,24 @@ struct StringArray(Array):
         var dst_address = self.values[].get_ptr_at(Int(start_offset))
         var src_address = value.unsafe_ptr()
         memcpy(dst_address, src_address, length)
+
+    fn write_to[W: Writer](self, mut writer: W):
+        """
+        Formats this StringArray to the provided Writer.
+
+        Parameters:
+            W: A type conforming to the Writable trait.
+
+        Args:
+            writer: The object to write to.
+        """
+
+        writer.write("StringArray( length=")
+        writer.write(self.data.length)
+        writer.write(")")
+
+    fn __str__(self) -> String:
+        return String.write(self)
+
+    fn __repr__(self) -> String:
+        return String.write(self)

@@ -3,13 +3,13 @@ from ..buffers import Buffer, Bitmap
 from sys.info import sizeof
 
 
-trait Array(Movable, Sized):
+trait Array(Movable, Representable, Sized, Stringable, Writable):
     fn as_data(self) -> ArrayData:
         ...
 
 
 @fieldwise_init
-struct ArrayData(Copyable, Movable, Writable):
+struct ArrayData(Copyable, Movable, Representable, Stringable, Writable):
     """ArrayData is the lower level abstraction directly usable by the library consumer.
 
     Equivalent with https://github.com/apache/arrow/blob/7184439dea96cd285e6de00e07c5114e4919a465/cpp/src/arrow/array/data.h#L62-L84.
@@ -83,3 +83,9 @@ struct ArrayData(Copyable, Movable, Writable):
             writer.write(" ")
             if i > 10:
                 break
+
+    fn __str__(self) -> String:
+        return String.write(self)
+
+    fn __repr__(self) -> String:
+        return String.write(self)

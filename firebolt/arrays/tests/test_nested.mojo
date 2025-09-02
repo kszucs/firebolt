@@ -53,3 +53,31 @@ def test_struct_array():
     assert_equal(data.dtype.fields[0].name, "id")
     assert_equal(data.dtype.fields[1].name, "name")
     assert_equal(data.dtype.fields[2].name, "active")
+
+
+def test_list_array_str_repr():
+    var ints = Int64Array()
+    var lists = ListArray(ints)
+
+    var str_repr = lists.__str__()
+    var repr_repr = lists.__repr__()
+
+    assert_equal(str_repr, "ListArray(length=0)")
+    assert_equal(repr_repr, "ListArray(length=0)")
+    assert_equal(str_repr, repr_repr)
+
+
+def test_struct_array_str_repr():
+    var fields = List[Field](
+        Field("id", int64),
+        Field("name", string),
+    )
+
+    var struct_arr = StructArray(fields, capacity=5)
+
+    var str_repr = struct_arr.__str__()
+    var repr_repr = struct_arr.__repr__()
+
+    assert_equal(str_repr, "StructArray(length=0)")
+    assert_equal(repr_repr, "StructArray(length=0)")
+    assert_equal(str_repr, repr_repr)
