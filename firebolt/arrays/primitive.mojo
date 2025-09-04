@@ -155,7 +155,7 @@ struct PrimitiveArray[T: DataType](Array):
 
     fn append(mut self, value: Self.scalar):
         if self.data.length >= self.capacity:
-            self.grow(self.capacity * 2)
+            self.grow(max(self.capacity * 2, self.data.length + 1))
         self.unsafe_append(value)
 
     # fn append(mut self, value: Optional[Self.scalar]):
@@ -199,7 +199,9 @@ struct PrimitiveArray[T: DataType](Array):
         writer.write(", buffer=[")
         for i in range(self.capacity):
             if self.is_valid(i):
-                writer.write(self.buffer[].unsafe_get(i + self.offset))
+                writer.write(
+                    self.buffer[].unsafe_get[T.native](i + self.offset)
+                )
             else:
                 writer.write("NULL")
             writer.write(", ")

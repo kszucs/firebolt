@@ -35,14 +35,15 @@ def test_boolean_array():
     var b = d.as_primitive[bool_]()
 
 
-def test_e():
+def test_append():
     var a = Int8Array()
     assert_equal(len(a), 0)
     assert_equal(a.capacity, 0)
-    a.unsafe_append(1)
-    a.unsafe_append(2)
-    a.unsafe_append(3)
+    a.append(1)
+    a.append(2)
+    a.append(3)
     assert_equal(len(a), 3)
+    assert_true(a.capacity >= len(a))
 
 
 def test_array_from_ints():
@@ -256,5 +257,17 @@ def test_primitive_array_repr():
         (
             "PrimitiveArray( dtype=DataType(code=uint8), offset=0, capacity=5,"
             " buffer=[255, 128, NULL, NULL, NULL, ])"
+        ),
+    )
+
+    var arr64 = Int64Array()
+    arr64.append(1)
+    arr64.append(3)
+    arr64.append(5)
+    assert_equal(
+        arr64.__repr__(),
+        (
+            "PrimitiveArray( dtype=DataType(code=int64), offset=0, capacity=4,"
+            " buffer=[1, 3, 5, NULL, ])"
         ),
     )
