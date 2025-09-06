@@ -64,6 +64,29 @@ struct ArrayData(Copyable, Movable, Representable, Stringable, Writable):
     fn as_list(self) raises -> ListArray:
         return ListArray(self)
 
+    fn _dynamic_write[W: Writer](self, index: Int, mut writer: W):
+        """Write to the given stream dispatching on the dtype."""
+
+        @parameter
+        for known_type in [
+            DType.bool,
+            DType.int16,
+            DType.int32,
+            DType.int64,
+            DType.int8,
+            DType.float32,
+            DType.float64,
+            DType.uint16,
+            DType.uint32,
+            DType.uint64,
+            DType.uint8,
+        ]:
+            if self.dtype.native == known_type:
+                writer.write(self.buffers[0][].unsafe_get[known_type](index))
+                return
+        writer.write("Can't process data type:")
+        writer.write(self.dtype)
+
     fn write_to[W: Writer](self, mut writer: W):
         """
         Formats this ArrayData to the provided Writer.
@@ -77,7 +100,8 @@ struct ArrayData(Copyable, Movable, Representable, Stringable, Writable):
 
         for i in range(self.length):
             if self.is_valid(i):
-                writer.write(self.buffers[0][].unsafe_get(i + self.offset))
+                var real_index = i + self.offset
+                self._dynamic_write(real_index, writer)
             else:
                 writer.write("-")
             writer.write(" ")
