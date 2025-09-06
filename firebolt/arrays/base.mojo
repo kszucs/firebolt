@@ -84,7 +84,7 @@ struct ArrayData(Copyable, Movable, Representable, Stringable, Writable):
             if self.dtype.native == known_type:
                 writer.write(self.buffers[0][].unsafe_get[known_type](index))
                 return
-        writer.write("Can't process data type:")
+        writer.write("dtype=")
         writer.write(self.dtype)
 
     fn write_to[W: Writer](self, mut writer: W):

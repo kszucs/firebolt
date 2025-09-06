@@ -300,6 +300,8 @@ struct DataType(
             writer.write("int32")
         elif self.code == INT64:
             writer.write("int64")
+        elif self.code == LIST:
+            writer.write("list")
         elif self.code == STRUCT:
             writer.write("struct")
         else:
