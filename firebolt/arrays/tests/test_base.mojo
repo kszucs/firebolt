@@ -3,7 +3,7 @@ from testing import assert_true, assert_false, assert_equal
 from memory import UnsafePointer, ArcPointer
 from firebolt.arrays.base import ArrayData
 from firebolt.buffers import Buffer, Bitmap
-from firebolt.dtypes import DType, int8, uint8
+from firebolt.dtypes import DType, int8, uint8, int64
 from firebolt.test_fixtures.arrays import build_array_data, assert_bitmap_set
 
 
@@ -67,26 +67,28 @@ def test_array_data_write_to_with_offset():
     var bitmap = ArcPointer(Bitmap.alloc(10))
     var buffer = ArcPointer(Buffer.alloc[DType.uint8](10))
 
-    # Set up data with values at positions 1,2,3
-    buffer[].unsafe_set[DType.uint8](1, 10)
-    buffer[].unsafe_set[DType.uint8](2, 11)
-    buffer[].unsafe_set[DType.uint8](3, 12)
+    @parameter
+    for dtype in [uint8, int64]:
+        # Set up data with values at positions 1,2,3
+        buffer[].unsafe_set[dtype.native](1, 10)
+        buffer[].unsafe_set[dtype.native](2, 11)
+        buffer[].unsafe_set[dtype.native](3, 12)
 
-    # Set validity for positions 1,2,3
-    bitmap[].unsafe_set(1, True)
-    bitmap[].unsafe_set(2, True)
-    bitmap[].unsafe_set(3, True)
+        # Set validity for positions 1,2,3
+        bitmap[].unsafe_set(1, True)
+        bitmap[].unsafe_set(2, True)
+        bitmap[].unsafe_set(3, True)
 
-    # Create ArrayData with offset=1, so logical indices 0,1,2 map to physical indices 1,2,3
-    var array_data = ArrayData(
-        dtype=uint8,
-        length=3,
-        bitmap=bitmap,
-        buffers=List(buffer),
-        children=List[ArcPointer[ArrayData]](),
-        offset=1,
-    )
+        # Create ArrayData with offset=1, so logical indices 0,1,2 map to physical indices 1,2,3
+        var array_data = ArrayData(
+            dtype=dtype,
+            length=3,
+            bitmap=bitmap,
+            buffers=List(buffer),
+            children=List[ArcPointer[ArrayData]](),
+            offset=1,
+        )
 
-    var writer = String()
-    writer.write(array_data)
-    assert_equal(writer.strip(), "10 11 12")
+        var writer = String()
+        writer.write(array_data)
+        assert_equal(writer.strip(), "10 11 12")
