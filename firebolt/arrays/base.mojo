@@ -84,6 +84,10 @@ struct ArrayData(Copyable, Movable, Representable, Stringable, Writable):
             if self.dtype.native == known_type:
                 writer.write(self.buffers[0][].unsafe_get[known_type](index))
                 return
+        if self.dtype.is_string():
+            # Should print a StringArray through the element specific write_to.
+            writer.write("<str>")
+            return
         writer.write("dtype=")
         writer.write(self.dtype)
 
