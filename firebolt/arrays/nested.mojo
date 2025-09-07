@@ -83,12 +83,6 @@ struct ListArray(Array):
     fn unsafe_get(self, index: Int) raises -> ArrayData:
         """Access the value at a given index in the list array."""
         var child_dtype = self.data.dtype.fields[0].dtype
-        if not child_dtype.is_numeric():
-            raise Error(
-                "Only numeric dtype supported right now, got {}".format(
-                    child_dtype
-                )
-            )
         var start = Int(self.offsets[].unsafe_get[DType.int32](index))
         var end = Int(self.offsets[].unsafe_get[DType.int32](index + 1))
         ref first_child = self.data.children[0][]
@@ -98,7 +92,7 @@ struct ListArray(Array):
             buffers=first_child.buffers,
             offset=self.data.offset + start,
             length=end - start,
-            children=List[ArcPointer[ArrayData]](),
+            children=first_child.children,
         )
 
     fn write_to[W: Writer](self, mut writer: W):
