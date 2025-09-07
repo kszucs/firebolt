@@ -80,17 +80,23 @@ struct ListArray(Array):
         )
         self.data.length += 1
 
-    fn unsafe_get(self, index: Int) raises -> ArrayData:
-        """Access the value at a given index in the list array."""
-        var child_dtype = self.data.dtype.fields[0].dtype
-        var start = Int(self.offsets[].unsafe_get[DType.int32](index))
-        var end = Int(self.offsets[].unsafe_get[DType.int32](index + 1))
+    fn unsafe_get(self, index: Int, out array_data: ArrayData) raises:
+        """Access the value at a given index in the list array.
+
+        Use an out argument to allow the caller to re-use memory while iterating over a pyarrow structure.
+        """
+        var start = Int(
+            self.offsets[].unsafe_get[DType.int32](self.data.offset + index)
+        )
+        var end = Int(
+            self.offsets[].unsafe_get[DType.int32](self.data.offset + index + 1)
+        )
         ref first_child = self.data.children[0][]
         return ArrayData(
-            dtype=child_dtype,
+            dtype=first_child.dtype,
             bitmap=first_child.bitmap,
             buffers=first_child.buffers,
-            offset=self.data.offset + start,
+            offset=start,
             length=end - start,
             children=first_child.children,
         )

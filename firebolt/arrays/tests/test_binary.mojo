@@ -19,8 +19,8 @@ def test_string_builder():
     assert_equal(len(a), 2)
     assert_equal(a.capacity, 2)
 
-    var s = a.unsafe_get(0)
-    assert_equal(String(s), "hello")
+    assert_equal(String(a.unsafe_get(0)), "hello")
+    assert_equal(String(a.unsafe_get(1)), "world")
 
     assert_equal(
         a.__str__().strip(),

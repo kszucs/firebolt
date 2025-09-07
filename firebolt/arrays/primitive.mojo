@@ -85,7 +85,7 @@ struct PrimitiveArray[T: DataType](Array):
         self.bitmap = data.bitmap
         self.buffer = data.buffers[0]
         self.capacity = data.length
-        self.offset = offset
+        self.offset = data.offset + offset
 
     fn __init__(out self, capacity: Int = 0, offset: Int = 0):
         self.capacity = capacity
