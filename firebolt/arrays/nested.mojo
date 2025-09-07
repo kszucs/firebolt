@@ -12,7 +12,9 @@ struct ListArray(Array):
 
     fn __init__(out self, data: ArrayData) raises:
         if not data.dtype.is_list():
-            raise Error("Unexpected dtype")
+            raise Error(
+                "Unexpected dtype {} instead of 'list'".format(data.dtype)
+            )
         elif len(data.buffers) != 1:
             raise Error("ListArray requires exactly one buffer")
         elif len(data.children) != 1:

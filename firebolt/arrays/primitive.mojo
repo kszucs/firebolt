@@ -75,7 +75,9 @@ struct PrimitiveArray[T: DataType](Array):
     fn __init__(out self, var data: ArrayData, offset: Int = 0) raises:
         # TODO(kszucs): put a dtype constraint here
         if data.dtype != T:
-            raise Error("Unexpected dtype")
+            raise Error(
+                "Unexpected dtype '{}' instead of '{}'.".format(data.dtype, T)
+            )
         elif len(data.buffers) != 1:
             raise Error("PrimitiveArray requires exactly one buffer")
 
