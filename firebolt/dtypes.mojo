@@ -385,6 +385,10 @@ struct DataType(
         return self.is_integer() or self.is_floating_point()
 
     @always_inline
+    fn is_string(self) -> Bool:
+        return self.code == STRING
+
+    @always_inline
     fn is_list(self) -> Bool:
         return self.code == LIST
 

@@ -21,3 +21,8 @@ def test_string_builder():
 
     var s = a.unsafe_get(0)
     assert_equal(String(s), "hello")
+
+    assert_equal(
+        a.__str__().strip(),
+        'StringArray( length=2, data= ["hello", "world",  ])',
+    )

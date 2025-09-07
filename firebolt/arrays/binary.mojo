@@ -116,7 +116,14 @@ struct StringArray(Array):
 
         writer.write("StringArray( length=")
         writer.write(self.data.length)
-        writer.write(")")
+        writer.write(", data= [")
+        for i in range(self.data.length):
+            writer.write('"')
+            writer.write(self.unsafe_get((i)))
+            writer.write('", ')
+            if i > 1:
+                break
+        writer.write(" ])")
 
     fn __str__(self) -> String:
         return String.write(self)
