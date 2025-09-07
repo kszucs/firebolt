@@ -35,6 +35,26 @@ def test_list_bool_array():
 
     var lists = ListArray(bools^)
     assert_equal(len(lists), 1)
+    var first_value = lists.unsafe_get(0)
+
+    fn get(index: Int) -> Bool:
+        return first_value.buffers[0][].unsafe_get[DType.bool](index)
+
+    assert_equal(get(0), True)
+    assert_equal(get(1), False)
+    assert_equal(get(2), True)
+
+
+def test_list_str():
+    var strings = StringArray()
+    strings.unsafe_append("hello")
+    strings.unsafe_append("world")
+
+    var lists = ListArray(strings^)
+    var first_value = StringArray(lists.unsafe_get(0))
+
+    assert_equal(first_value.unsafe_get(0), "hello")
+    assert_equal(first_value.unsafe_get(1), "world")
 
 
 def test_struct_array():
@@ -83,8 +103,3 @@ def test_struct_array_str_repr():
     assert_equal(str_repr, "StructArray(length=0)")
     assert_equal(repr_repr, "StructArray(length=0)")
     assert_equal(str_repr, repr_repr)
-
-
-fn main() raises -> None:
-    """Main entry point to get stdout during testing."""
-    test_list_int_array()
