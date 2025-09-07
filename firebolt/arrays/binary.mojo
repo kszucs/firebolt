@@ -13,7 +13,9 @@ struct StringArray(Array):
 
     fn __init__(out self, data: ArrayData) raises:
         if data.dtype != string:
-            raise Error("Unexpected dtype")
+            raise Error(
+                "Unexpected dtype '{}' instead of 'string'.".format(data.dtype)
+            )
         elif len(data.buffers) != 2:
             raise Error("StringArray requires exactly two buffers")
 
