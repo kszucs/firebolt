@@ -6,6 +6,70 @@ from firebolt.dtypes import *
 from firebolt.test_fixtures.bool_array import as_bool_array_scalar
 
 
+fn build_list_of_list[data_type: DataType]() raises -> ListArray:
+    """Build a test ListArray.
+
+    See: https://elferherrera.github.io/arrow_guide/arrays_nested.html
+    """
+
+    # Define all the values.
+    var bitmap = ArcPointer(Bitmap.alloc(10))
+    bitmap[].unsafe_range_set(0, 10, True)
+    var buffer = ArcPointer(Buffer.alloc[data_type.native](10))
+    for i in range(10):
+        buffer[].unsafe_set[data_type.native](i, i + 1)
+
+    var value_data = ArrayData(
+        dtype=data_type,
+        length=10,
+        bitmap=bitmap,
+        buffers=List(buffer),
+        children=List[ArcPointer[ArrayData]](),
+        offset=0,
+    )
+
+    # Define the PrimitiveArrays.
+    var value_offset = ArcPointer(Buffer.alloc(7))
+    value_offset[].unsafe_set[DType.int32](0, 0)
+    value_offset[].unsafe_set[DType.int32](1, 2)
+    value_offset[].unsafe_set[DType.int32](2, 4)
+    value_offset[].unsafe_set[DType.int32](3, 7)
+    value_offset[].unsafe_set[DType.int32](4, 7)
+    value_offset[].unsafe_set[DType.int32](5, 8)
+    value_offset[].unsafe_set[DType.int32](6, 10)
+
+    var list_bitmap = ArcPointer(Bitmap.alloc(6))
+    list_bitmap[].unsafe_range_set(0, 6, True)
+    list_bitmap[].unsafe_set(3, False)
+    var list_data = ArrayData(
+        dtype=list_(data_type),
+        length=6,
+        buffers=List(value_offset),
+        children=List(ArcPointer(value_data)),
+        bitmap=list_bitmap,
+        offset=0,
+    )
+
+    # Now define the master array data.
+    var top_offsets = Buffer.alloc(4)
+    top_offsets.unsafe_set[DType.int32](0, 0)
+    top_offsets.unsafe_set[DType.int32](1, 2)
+    top_offsets.unsafe_set[DType.int32](2, 5)
+    top_offsets.unsafe_set[DType.int32](3, 6)
+    var top_bitmap = ArcPointer(Bitmap.alloc(4))
+    top_bitmap[].unsafe_range_set(0, 4, True)
+    return ListArray(
+        ArrayData(
+            dtype=list_(list_(data_type)),
+            length=4,
+            buffers=List(ArcPointer(top_offsets^)),
+            children=List(ArcPointer(list_data)),
+            bitmap=top_bitmap,
+            offset=0,
+        )
+    )
+
+
 def test_list_int_array():
     var ints = Int64Array(capacity=3)
     ints.append(1)
@@ -57,6 +121,19 @@ def test_list_str():
     assert_equal(first_value.unsafe_get(1), "world")
 
 
+def test_list_of_list():
+    list2 = build_list_of_list[int64]()
+    top = ListArray(list2.unsafe_get(0))
+    middle_0 = top.unsafe_get(0)
+    bottom = Int64Array(middle_0)
+    assert_equal(bottom.unsafe_get(1), 2)
+    assert_equal(bottom.unsafe_get(0), 1)
+    middle_1 = top.unsafe_get(1)
+    bottom = Int64Array(middle_1)
+    assert_equal(bottom.unsafe_get(0), 3)
+    assert_equal(bottom.unsafe_get(1), 4)
+
+
 def test_struct_array():
     var fields = List[Field](
         Field("id", int64),
@@ -103,3 +180,7 @@ def test_struct_array_str_repr():
     assert_equal(str_repr, "StructArray(length=0)")
     assert_equal(repr_repr, "StructArray(length=0)")
     assert_equal(str_repr, repr_repr)
+
+
+fn main() raises:
+    test_list_of_list()
