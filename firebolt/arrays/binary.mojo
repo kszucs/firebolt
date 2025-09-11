@@ -82,8 +82,12 @@ struct StringArray(Array):
         memcpy(dst_address, src_address, len(value))
 
     fn unsafe_get(self, index: UInt) -> StringSlice[__origin_of(self)]:
-        var start_offset = self.offsets[].unsafe_get[DType.uint32](index)
-        var end_offset = self.offsets[].unsafe_get[DType.uint32](index + 1)
+        var start_offset = self.offsets[].unsafe_get[DType.uint32](
+            index + self.data.offset
+        )
+        var end_offset = self.offsets[].unsafe_get[DType.uint32](
+            index + 1 + self.data.offset
+        )
         var address = self.values[].get_ptr_at(Int(start_offset))
         var length = UInt(Int(end_offset - start_offset))
         return StringSlice[__origin_of(self)](ptr=address, length=length)
