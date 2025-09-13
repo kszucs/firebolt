@@ -45,7 +45,7 @@ fn build_list_of_list[data_type: DataType]() raises -> ListArray:
         dtype=list_(data_type),
         length=6,
         buffers=List(value_offset),
-        children=List(ArcPointer(value_data)),
+        children=List(ArcPointer(value_data^)),
         bitmap=list_bitmap,
         offset=0,
     )
@@ -63,7 +63,7 @@ fn build_list_of_list[data_type: DataType]() raises -> ListArray:
             dtype=list_(list_(data_type)),
             length=4,
             buffers=List(ArcPointer(top_offsets^)),
-            children=List(ArcPointer(list_data)),
+            children=List(ArcPointer(list_data^)),
             bitmap=top_bitmap,
             offset=0,
         )
@@ -78,16 +78,16 @@ def test_list_int_array():
     var lists = ListArray(ints^)
     assert_equal(lists.data.dtype, list_(int64))
 
-    assert_equal(len(lists), 1)
-
-    var data = lists.as_data()
-    assert_equal(data.length, 1)
-
-    var arr = data.as_list()
-    assert_equal(len(arr), 1)
-
     var first_value = lists.unsafe_get(0)
     assert_equal(first_value.__str__().strip(), "1 2 3")
+
+    assert_equal(len(lists), 1)
+
+    var data = lists^.take_data()
+    assert_equal(data.length, 1)
+
+    var arr = data^.as_list()
+    assert_equal(len(arr), 1)
 
 
 def test_list_bool_array():
@@ -100,9 +100,10 @@ def test_list_bool_array():
     var lists = ListArray(bools^)
     assert_equal(len(lists), 1)
     var first_value = lists.unsafe_get(0)
+    var buffer = first_value.buffers[0]
 
     fn get(index: Int) -> Bool:
-        return first_value.buffers[0][].unsafe_get[DType.bool](index)
+        return buffer[].unsafe_get[DType.bool](index)
 
     assert_equal(get(0), True)
     assert_equal(get(1), False)
@@ -125,11 +126,11 @@ def test_list_of_list():
     list2 = build_list_of_list[int64]()
     top = ListArray(list2.unsafe_get(0))
     middle_0 = top.unsafe_get(0)
-    bottom = Int64Array(middle_0)
+    bottom = Int64Array(middle_0^)
     assert_equal(bottom.unsafe_get(1), 2)
     assert_equal(bottom.unsafe_get(0), 1)
     middle_1 = top.unsafe_get(1)
-    bottom = Int64Array(middle_1)
+    bottom = Int64Array(middle_1^)
     assert_equal(bottom.unsafe_get(0), 3)
     assert_equal(bottom.unsafe_get(1), 4)
 
@@ -141,11 +142,11 @@ def test_struct_array():
         Field("active", bool_),
     )
 
-    var struct_arr = StructArray(fields, capacity=10)
+    var struct_arr = StructArray(fields^, capacity=10)
     assert_equal(len(struct_arr), 0)
     assert_equal(struct_arr.capacity, 10)
 
-    var data = struct_arr.as_data()
+    var data = struct_arr^.take_data()
     assert_equal(data.length, 0)
     assert_true(data.dtype.is_struct())
     assert_equal(len(data.dtype.fields), 3)
@@ -172,7 +173,7 @@ def test_struct_array_str_repr():
         Field("name", string),
     )
 
-    var struct_arr = StructArray(fields, capacity=5)
+    var struct_arr = StructArray(fields^, capacity=5)
 
     var str_repr = struct_arr.__str__()
     var repr_repr = struct_arr.__repr__()

@@ -1,6 +1,6 @@
 [project]
 authors = ["Krisztian Szucs <szucs.krisztian@gmail.com>"]
-channels = ["https://conda.modular.com/max-nightly", "https://conda.modular.com/max", "https://repo.prefix.dev/modular-community", "conda-forge"]
+channels = ["conda-forge", "https://conda.modular.com/max-nightly"]
 name = "firebolt"
 platforms = ["osx-arm64", "linux-64"]
 version = "0.1.0"
@@ -11,7 +11,7 @@ fmt = "mojo format firebolt"
 package = "mojo package firebolt -o package/firebolt.mojopkg"
 
 [dependencies]
-mojo = "==25.6.0.dev2025090305"
+mojo = "<1.0.0"
 
 [pypi-dependencies]
 pyarrow = ">=19.0.1, <21"

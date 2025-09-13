@@ -15,12 +15,12 @@ struct Schema(Copyable, Movable):
     fn __init__(
         out self,
         *,
-        fields: List[Field] = List[Field](),
-        metadata: Dict[String, String] = Dict[String, String](),
+        var fields: List[Field] = List[Field](),
+        var metadata: Dict[String, String] = Dict[String, String](),
     ):
         """Initializes a schema with the given fields, if provided."""
-        self.fields = fields
-        self.metadata = metadata
+        self.fields = fields^
+        self.metadata = metadata^
 
     @staticmethod
     fn from_c(c_arrow_schema: CArrowSchema) raises -> Schema:
@@ -29,9 +29,9 @@ struct Schema(Copyable, Movable):
         for i in range(c_arrow_schema.n_children):
             var child = c_arrow_schema.children[i]
             var field = child[].to_field()
-            fields.append(field)
+            fields.append(field^)
 
-        return Schema(fields=fields)
+        return Schema(fields=fields^)
 
     fn append(mut self, var field: Field):
         """Appends a field to the schema."""
@@ -42,7 +42,7 @@ struct Schema(Copyable, Movable):
         var names = List[String]()
         for field in self.fields:
             names.append(field.name)
-        return names
+        return names^
 
     fn field(
         self,

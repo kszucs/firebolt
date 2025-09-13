@@ -4,8 +4,19 @@ from sys.info import sizeof
 
 
 trait Array(Movable, Representable, Sized, Stringable, Writable):
-    fn as_data(self) -> ArrayData:
-        ...
+    fn take_data(deinit self) -> ArrayData:
+        """Construct an ArrayData by consuming self."""
+        pass
+
+    fn as_data[
+        self_origin: ImmutableOrigin
+    ](ref [self_origin]self) -> UnsafePointer[ArrayData, mut=False]:
+        """Return a read only reference to the ArrayData wrapped by self.
+
+        Note that ideally the output type would be `ref [self_origin] ArrayData` but this is not supported yet.
+        https://forum.modular.com/t/how-to-mark-a-trait-as-applying-to-not-register-passable/2265/6?u=mseritan
+        """
+        pass
 
 
 @fieldwise_init
@@ -22,47 +33,55 @@ struct ArrayData(Copyable, Movable, Representable, Stringable, Writable):
     var children: List[ArcPointer[ArrayData]]
     var offset: Int
 
+    fn __copyinit__(out self, existing: Self):
+        self.dtype = existing.dtype.copy()
+        self.length = existing.length
+        self.bitmap = existing.bitmap
+        self.buffers = existing.buffers.copy()
+        self.children = existing.children.copy()
+        self.offset = existing.offset
+
     fn is_valid(self, index: Int) -> Bool:
         return self.bitmap[].unsafe_get(index + self.offset)
 
-    fn as_primitive[T: DataType](self) raises -> PrimitiveArray[T]:
-        return PrimitiveArray[T](self)
+    fn as_primitive[T: DataType](var self) raises -> PrimitiveArray[T]:
+        return PrimitiveArray[T](self^)
 
-    fn as_int8(self) raises -> Int8Array:
-        return Int8Array(self)
+    fn as_int8(var self) raises -> Int8Array:
+        return Int8Array(self^)
 
-    fn as_int16(self) raises -> Int16Array:
-        return Int16Array(self)
+    fn as_int16(var self) raises -> Int16Array:
+        return Int16Array(self^)
 
-    fn as_int32(self) raises -> Int32Array:
-        return Int32Array(self)
+    fn as_int32(var self) raises -> Int32Array:
+        return Int32Array(self^)
 
-    fn as_int64(self) raises -> Int64Array:
-        return Int64Array(self)
+    fn as_int64(var self) raises -> Int64Array:
+        return Int64Array(self^)
 
-    fn as_uint8(self) raises -> UInt8Array:
-        return UInt8Array(self)
+    fn as_uint8(var self) raises -> UInt8Array:
+        return UInt8Array(self^)
 
-    fn as_uint16(self) raises -> UInt16Array:
-        return UInt16Array(self)
+    fn as_uint16(var self) raises -> UInt16Array:
+        return UInt16Array(self^)
 
-    fn as_uint32(self) raises -> UInt32Array:
-        return UInt32Array(self)
+    fn as_uint32(var self) raises -> UInt32Array:
+        return UInt32Array(self^)
 
-    fn as_uint64(self) raises -> UInt64Array:
-        return UInt64Array(self)
+    fn as_uint64(var self) raises -> UInt64Array:
+        return UInt64Array(self^)
 
-    fn as_float32(self) raises -> Float32Array:
-        return Float32Array(self)
+    fn as_float32(var self) raises -> Float32Array:
+        return Float32Array(self^)
 
-    fn as_float64(self) raises -> Float64Array:
-        return Float64Array(self)
+    fn as_float64(var self) raises -> Float64Array:
+        return Float64Array(self^)
 
-    fn as_string(self) raises -> StringArray:
-        return StringArray(self)
+    fn as_string(var self) raises -> StringArray:
+        return StringArray(self^)
 
-    fn as_list(self) raises -> ListArray:
-        return ListArray(self)
+    fn as_list(var self) raises -> ListArray:
+        return ListArray(self^)
 
     fn _dynamic_write[W: Writer](self, index: Int, mut writer: W):
         """Write to the given stream dispatching on the dtype."""
@@ -117,3 +136,20 @@ struct ArrayData(Copyable, Movable, Representable, Stringable, Writable):
 
     fn __repr__(self) -> String:
         return String.write(self)
+
+    fn append_to_array(
+        deinit self: ArrayData, mut combined: ArrayData, start: Int
+    ) -> Int:
+        """Append the content self to the combined array, consumes self.
+
+        Args:
+            combined: Array to append to.
+            start: Position where to append.
+
+        Returns:
+            The new start position.
+        """
+        combined.bitmap[].extend(self.bitmap[], start, self.length)
+        combined.buffers.extend(self.buffers^)
+        combined.children.extend(self.children^)
+        return start + self.length

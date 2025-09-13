@@ -21,9 +21,9 @@ struct ChunkedArray:
             total_length += chunk.length
         self.length = total_length
 
-    fn __init__(out self, dtype: DataType, chunks: List[ArrayData]):
-        self.dtype = dtype
-        self.chunks = chunks
+    fn __init__(out self, var dtype: DataType, var chunks: List[ArrayData]):
+        self.dtype = dtype^
+        self.chunks = chunks^
         self.length = 0
         self._compute_length()
 
@@ -38,11 +38,11 @@ struct ChunkedArray:
         """
         return self.chunks[index]
 
-    fn combine_chunks(self) -> ArrayData:
+    fn combine_chunks(var self, out combined: ArrayData):
         """Combines all chunks into a single array."""
         var bitmap = ArcPointer(Bitmap.alloc(self.length))
-        var combined = ArrayData(
-            dtype=self.dtype,
+        combined = ArrayData(
+            dtype=self.dtype.copy(),
             length=self.length,
             bitmap=bitmap,
             buffers=List[ArcPointer[Buffer]](),
@@ -50,9 +50,7 @@ struct ChunkedArray:
             offset=0,
         )
         var start = 0
-        for chunk in self.chunks:
-            combined.bitmap[].extend(chunk.bitmap[], start, chunk.length)
-            start += chunk.length
-            combined.buffers.extend(chunk.buffers)
-            combined.children.extend(chunk.children)
-        return combined
+        while self.chunks:
+            var chunk = self.chunks.pop(0)
+            start += chunk^.append_to_array(combined, start)
+        return combined^

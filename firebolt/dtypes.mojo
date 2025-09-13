@@ -151,10 +151,10 @@ struct Field(
     var nullable: Bool
 
     fn __init__(
-        out self, name: String, dtype: DataType, nullable: Bool = False
+        out self, name: String, var dtype: DataType, nullable: Bool = False
     ):
         self.name = name
-        self.dtype = dtype
+        self.dtype = dtype^
         self.nullable = nullable
 
     fn __eq__(self, other: Field) -> Bool:
@@ -244,12 +244,12 @@ struct DataType(
     fn __init__(out self, *, code: UInt8, fields: List[Field]):
         self.code = code
         self.native = DType.invalid
-        self.fields = fields
+        self.fields = fields.copy()
 
     fn __copyinit__(out self, value: Self):
         self.code = value.code
         self.native = value.native
-        self.fields = value.fields
+        self.fields = value.fields.copy()
 
     fn __moveinit__(out self, deinit value: Self):
         self.code = value.code
@@ -397,21 +397,16 @@ struct DataType(
         return self.code == STRUCT
 
 
-fn list_(value_type: DataType) -> DataType:
-    return DataType(code=LIST, fields=List(Field("value", value_type)))
+fn list_(var value_type: DataType) -> DataType:
+    return DataType(code=LIST, fields=List(Field("value", value_type^)))
 
 
 fn struct_(fields: List[Field]) -> DataType:
     return DataType(code=STRUCT, fields=fields)
 
 
-fn struct_(*fields: Field) -> DataType:
-    # TODO(kszucs): it would be easier to just List(struct_fields)
-    # but that doesn't seem to be supported
-    var struct_fields = List[Field](capacity=len(fields))
-    for field in fields:
-        struct_fields.append(field)
-    return DataType(code=STRUCT, fields=struct_fields)
+fn struct_(var *fields: Field) -> DataType:
+    return DataType(code=STRUCT, fields=List(elements=fields^))
 
 
 alias null = DataType(code=NA)

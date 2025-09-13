@@ -41,7 +41,7 @@ def build_array_data(length: Int, nulls: Int) -> ArrayData:
         dtype=uint8,
         length=length,
         bitmap=ArcPointer(bitmap^),
-        buffers=buffers,
+        buffers=buffers^,
         children=List[ArcPointer[ArrayData]](),
         offset=0,
     )

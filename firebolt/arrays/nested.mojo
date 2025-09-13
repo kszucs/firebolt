@@ -1,16 +1,12 @@
 from memory import ArcPointer
 from ..buffers import Buffer, Bitmap
-from ..dtypes import *
 
 
 struct ListArray(Array):
     var data: ArrayData
-    var bitmap: ArcPointer[Bitmap]
-    var offsets: ArcPointer[Buffer]
-    var values: ArcPointer[ArrayData]
     var capacity: Int
 
-    fn __init__(out self, data: ArrayData) raises:
+    fn __init__(out self, var data: ArrayData) raises:
         if not data.dtype.is_list():
             raise Error(
                 "Unexpected dtype {} instead of 'list'".format(data.dtype)
@@ -20,11 +16,17 @@ struct ListArray(Array):
         elif len(data.children) != 1:
             raise Error("ListArray requires exactly one child array")
 
-        self.data = data
-        self.bitmap = data.bitmap
-        self.offsets = data.buffers[0]
-        self.values = data.children[0]
         self.capacity = data.length
+        self.data = data^
+
+    fn bitmap(self) -> ArcPointer[Bitmap]:
+        return self.data.bitmap
+
+    fn offsets(self) -> ArcPointer[Buffer]:
+        return self.data.buffers[0]
+
+    fn values(self) -> ArcPointer[ArrayData]:
+        return self.data.children[0]
 
     fn __init__[T: Array](out self, var values: T, capacity: Int = 1):
         """Initialize a list with the given values.
@@ -35,8 +37,8 @@ struct ListArray(Array):
             values: Array to use as the first element in the ListArray.
             capacity: The capacity of the ListArray.
         """
-        var values_data = values.as_data()
-        var list_dtype = list_(values_data.dtype)
+        var values_data = values^.take_data()
+        var list_dtype = list_(values_data.dtype.copy())
 
         var bitmap = Bitmap.alloc(capacity)
         bitmap.unsafe_set(0, True)
@@ -45,38 +47,37 @@ struct ListArray(Array):
         offsets.unsafe_set[DType.uint32](1, values_data.length)
 
         self.capacity = capacity
-        self.bitmap = ArcPointer(bitmap^)
-        self.offsets = ArcPointer(offsets^)
-        self.values = ArcPointer(values_data^)
         self.data = ArrayData(
-            dtype=list_dtype,
+            dtype=list_dtype^,
             length=1,
-            bitmap=self.bitmap,
-            buffers=List(self.offsets),
-            children=List(self.values),
+            bitmap=ArcPointer(bitmap^),
+            buffers=List(ArcPointer(offsets^)),
+            children=List(ArcPointer(values_data^)),
             offset=0,
         )
 
     fn __moveinit__(out self, deinit existing: Self):
         self.data = existing.data^
-        self.bitmap = existing.bitmap^
-        self.offsets = existing.offsets^
-        self.values = existing.values^
         self.capacity = existing.capacity
 
     fn __len__(self) -> Int:
         return self.data.length
 
-    fn as_data(self) -> ArrayData:
-        return self.data
+    fn as_data[
+        self_origin: ImmutableOrigin
+    ](ref [self_origin]self) -> UnsafePointer[ArrayData, mut=False]:
+        return UnsafePointer(to=self.data)
+
+    fn take_data(deinit self) -> ArrayData:
+        return self.data^
 
     fn is_valid(self, index: Int) -> Bool:
-        return self.bitmap[].unsafe_get(index)
+        return self.bitmap()[].unsafe_get(index)
 
     fn unsafe_append(mut self, is_valid: Bool):
-        self.bitmap[].unsafe_set(self.data.length, is_valid)
-        self.offsets[].unsafe_set[DType.uint32](
-            self.data.length + 1, self.values[].length
+        self.bitmap()[].unsafe_set(self.data.length, is_valid)
+        self.offsets()[].unsafe_set[DType.uint32](
+            self.data.length + 1, self.values()[].length
         )
         self.data.length += 1
 
@@ -86,19 +87,21 @@ struct ListArray(Array):
         Use an out argument to allow the caller to re-use memory while iterating over a pyarrow structure.
         """
         var start = Int(
-            self.offsets[].unsafe_get[DType.int32](self.data.offset + index)
+            self.offsets()[].unsafe_get[DType.int32](self.data.offset + index)
         )
         var end = Int(
-            self.offsets[].unsafe_get[DType.int32](self.data.offset + index + 1)
+            self.offsets()[].unsafe_get[DType.int32](
+                self.data.offset + index + 1
+            )
         )
         ref first_child = self.data.children[0][]
         return ArrayData(
-            dtype=first_child.dtype,
+            dtype=first_child.dtype.copy(),
             bitmap=first_child.bitmap,
-            buffers=first_child.buffers,
+            buffers=first_child.buffers.copy(),
             offset=start,
             length=end - start,
-            children=first_child.children,
+            children=first_child.children.copy(),
         )
 
     fn write_to[W: Writer](self, mut writer: W):
@@ -126,7 +129,6 @@ struct ListArray(Array):
 
 struct StructArray(Array):
     var data: ArrayData
-    var bitmap: ArcPointer[Bitmap]
     var fields: List[Field]
     var capacity: Int
 
@@ -141,12 +143,11 @@ struct StructArray(Array):
         var struct_dtype = struct_(fields)
 
         self.capacity = capacity
-        self.bitmap = ArcPointer(bitmap^)
         self.fields = fields^
         self.data = ArrayData(
-            dtype=struct_dtype,
+            dtype=struct_dtype^,
             length=0,
-            bitmap=self.bitmap,
+            bitmap=ArcPointer(bitmap^),
             buffers=List[ArcPointer[Buffer]](),
             children=List[ArcPointer[ArrayData]](),
             offset=0,
@@ -154,15 +155,19 @@ struct StructArray(Array):
 
     fn __moveinit__(out self, deinit existing: Self):
         self.data = existing.data^
-        self.bitmap = existing.bitmap^
         self.fields = existing.fields^
         self.capacity = existing.capacity
 
     fn __len__(self) -> Int:
         return self.data.length
 
-    fn as_data(self) -> ArrayData:
-        return self.data
+    fn take_data(deinit self) -> ArrayData:
+        return self.data^
+
+    fn as_data[
+        self_origin: ImmutableOrigin
+    ](ref [self_origin]self) -> UnsafePointer[ArrayData, mut=False]:
+        return UnsafePointer(to=self.data)
 
     fn write_to[W: Writer](self, mut writer: W):
         """
