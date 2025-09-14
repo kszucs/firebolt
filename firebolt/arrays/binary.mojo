@@ -9,7 +9,7 @@ struct StringArray(Array):
     var capacity: Int
 
     fn __init__(out self, var data: ArrayData) raises:
-        if data.dtype != string:
+        if data.dtype != materialize[string]():
             raise Error(
                 "Unexpected dtype '{}' instead of 'string'.".format(data.dtype)
             )
@@ -37,7 +37,7 @@ struct StringArray(Array):
 
         self.capacity = capacity
         self.data = ArrayData(
-            dtype=string,
+            dtype=materialize[string](),
             length=0,
             bitmap=ArcPointer(bitmap^),
             buffers=List(ArcPointer(offsets^), ArcPointer(values^)),

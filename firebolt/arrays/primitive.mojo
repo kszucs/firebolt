@@ -72,9 +72,11 @@ struct PrimitiveArray[T: DataType](Array):
 
     fn __init__(out self, var data: ArrayData, offset: Int = 0) raises:
         # TODO(kszucs): put a dtype constraint here
-        if data.dtype != T:
+        if data.dtype != materialize[T]():
             raise Error(
-                "Unexpected dtype '{}' instead of '{}'.".format(data.dtype, T)
+                "Unexpected dtype '{}' instead of '{}'.".format(
+                    data.dtype, materialize[T]()
+                )
             )
         elif len(data.buffers) != 1:
             raise Error("PrimitiveArray requires exactly one buffer")
@@ -89,7 +91,7 @@ struct PrimitiveArray[T: DataType](Array):
         bitmap = ArcPointer(Bitmap.alloc(capacity))
         buffer = ArcPointer(Buffer.alloc[T.native](capacity))
         self.data = ArrayData(
-            dtype=T,
+            dtype=materialize[T](),
             length=0,
             bitmap=bitmap,
             buffers=List(buffer),
@@ -151,7 +153,7 @@ struct PrimitiveArray[T: DataType](Array):
         var buffer = Buffer.alloc[T.native](size)
         return PrimitiveArray[T](
             data=ArrayData(
-                dtype=T,
+                dtype=materialize[T](),
                 length=size,
                 bitmap=ArcPointer(bitmap^),
                 buffers=List(ArcPointer(buffer^)),
@@ -200,7 +202,7 @@ struct PrimitiveArray[T: DataType](Array):
         """
 
         writer.write("PrimitiveArray( dtype=")
-        writer.write(Self.dtype)
+        writer.write(materialize[Self.dtype]())
         writer.write(", offset=")
         writer.write(self.offset)
         writer.write(", capacity=")

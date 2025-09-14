@@ -38,7 +38,7 @@ def build_array_data(length: Int, nulls: Int) -> ArrayData:
 
     var buffers = List(ArcPointer(buffer^))
     return ArrayData(
-        dtype=uint8,
+        dtype=materialize[uint8](),
         length=length,
         bitmap=ArcPointer(bitmap^),
         buffers=buffers^,
