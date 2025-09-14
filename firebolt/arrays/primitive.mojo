@@ -67,10 +67,8 @@ struct PrimitiveArray[T: DataType](Array):
     alias dtype = T
     alias scalar = Scalar[T.native]
     var data: ArrayData
-    var bitmap: ArcPointer[Bitmap]
-    var buffer: ArcPointer[Buffer]
-    var capacity: Int
     var offset: Int
+    var capacity: Int
 
     fn __init__(out self, var data: ArrayData, offset: Int = 0) raises:
         # TODO(kszucs): put a dtype constraint here
@@ -81,39 +79,46 @@ struct PrimitiveArray[T: DataType](Array):
         elif len(data.buffers) != 1:
             raise Error("PrimitiveArray requires exactly one buffer")
 
-        self.data = data
-        self.bitmap = data.bitmap
-        self.buffer = data.buffers[0]
-        self.capacity = data.length
         self.offset = data.offset + offset
+        self.capacity = data.length
+        self.data = data^
 
     fn __init__(out self, capacity: Int = 0, offset: Int = 0):
         self.capacity = capacity
         self.offset = offset
-        self.bitmap = ArcPointer(Bitmap.alloc(capacity))
-        self.buffer = ArcPointer(Buffer.alloc[T.native](capacity))
+        bitmap = ArcPointer(Bitmap.alloc(capacity))
+        buffer = ArcPointer(Buffer.alloc[T.native](capacity))
         self.data = ArrayData(
             dtype=T,
             length=0,
-            bitmap=self.bitmap,
-            buffers=List(self.buffer),
+            bitmap=bitmap,
+            buffers=List(buffer),
             children=List[ArcPointer[ArrayData]](),
             offset=self.offset,
         )
 
     fn __moveinit__(out self, deinit existing: Self):
         self.data = existing.data^
-        self.bitmap = existing.bitmap^
-        self.buffer = existing.buffer^
         self.capacity = existing.capacity
         self.offset = existing.offset
 
-    fn as_data(self) -> ArrayData:
-        return self.data
+    fn bitmap(self) -> ref [self.data.bitmap] ArcPointer[Bitmap]:
+        return self.data.bitmap
+
+    fn buffer(self) -> ref [self.data.buffers] ArcPointer[Buffer]:
+        return self.data.buffers[0]
+
+    fn take_data(deinit self) -> ArrayData:
+        return self.data^
+
+    fn as_data[
+        self_origin: ImmutableOrigin
+    ](ref [self_origin]self) -> UnsafePointer[ArrayData, mut=False]:
+        return UnsafePointer(to=self.data)
 
     fn grow(mut self, capacity: Int):
-        self.bitmap[].grow(capacity)
-        self.buffer[].grow[T.native](capacity)
+        self.bitmap()[].grow(capacity)
+        self.buffer()[].grow[T.native](capacity)
         self.capacity = capacity
 
     @always_inline
@@ -122,16 +127,16 @@ struct PrimitiveArray[T: DataType](Array):
 
     @always_inline
     fn is_valid(self, index: Int) -> Bool:
-        return self.bitmap[].unsafe_get(index + self.offset)
+        return self.bitmap()[].unsafe_get(index + self.offset)
 
     @always_inline
     fn unsafe_get(self, index: Int) -> Self.scalar:
-        return self.buffer[].unsafe_get[T.native](index + self.offset)
+        return self.buffer()[].unsafe_get[T.native](index + self.offset)
 
     @always_inline
     fn unsafe_set(mut self, index: Int, value: Self.scalar):
-        self.bitmap[].unsafe_set(index + self.offset, True)
-        self.buffer[].unsafe_set[T.native](index + self.offset, value)
+        self.bitmap()[].unsafe_set(index + self.offset, True)
+        self.buffer()[].unsafe_set[T.native](index + self.offset, value)
 
     @always_inline
     fn unsafe_append(mut self, value: Self.scalar):
@@ -173,12 +178,14 @@ struct PrimitiveArray[T: DataType](Array):
 
         Currently we drop nulls from individual buffers, we do not delete buffers.
         """
-        drop_nulls[T](self.buffer, self.bitmap, 0, self.data.length)
-        self.data.length = self.bitmap[].buffer.bit_count()
+        drop_nulls[T](
+            self.data.buffers[0], self.data.bitmap, 0, self.data.length
+        )
+        self.data.length = self.bitmap()[].buffer.bit_count()
 
     fn null_count(self) -> Int:
         """Returns the number of null values in the array."""
-        var valid_count = self.bitmap[].buffer.bit_count()
+        var valid_count = self.bitmap()[].buffer.bit_count()
         return self.data.length - valid_count
 
     fn write_to[W: Writer](self, mut writer: W):
@@ -202,7 +209,7 @@ struct PrimitiveArray[T: DataType](Array):
         for i in range(self.capacity):
             if self.is_valid(i):
                 writer.write(
-                    self.buffer[].unsafe_get[T.native](i + self.offset)
+                    self.buffer()[].unsafe_get[T.native](i + self.offset)
                 )
             else:
                 writer.write("NULL")

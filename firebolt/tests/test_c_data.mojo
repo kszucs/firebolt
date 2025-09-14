@@ -42,8 +42,8 @@ def test_primitive_array_from_pyarrow():
     assert_equal(c_array.n_children, 0)
 
     var data = c_array.to_array(dtype)
-    var array = data.as_int64()
-    assert_equal(array.bitmap[].size(), 64)
+    var array = data^.as_int64()
+    assert_equal(array.bitmap()[].size(), 64)
     assert_equal(array.is_valid(0), True)
     assert_equal(array.is_valid(1), True)
     assert_equal(array.is_valid(2), True)
@@ -81,9 +81,9 @@ def test_binary_array_from_pyarrow():
     assert_equal(c_array.n_children, 0)
 
     var data = c_array.to_array(dtype)
-    var array = data.as_string()
+    var array = data^.as_string()
 
-    assert_equal(array.bitmap[].size(), 64)
+    assert_equal(array.bitmap()[].size(), 64)
     assert_equal(array.is_valid(0), True)
     assert_equal(array.is_valid(1), True)
     assert_equal(array.is_valid(2), False)
@@ -121,14 +121,14 @@ def test_list_array_from_pyarrow():
     assert_equal(c_array.n_children, 1)
 
     var data = c_array.to_array(dtype)
-    var array = data.as_list()
+    var array = data^.as_list()
 
-    assert_equal(array.bitmap[].size(), 64)
+    assert_equal(array.bitmap()[].size(), 64)
     assert_equal(array.is_valid(0), True)
     assert_equal(array.is_valid(1), False)
     assert_equal(array.is_valid(2), True)
 
-    var values = array.values[].as_int64()
+    var values = array.unsafe_get(0).as_int64()
     assert_equal(values.unsafe_get(0), 1)
     assert_equal(values.unsafe_get(1), 2)
     values.unsafe_set(0, 10)
@@ -213,11 +213,11 @@ def test_arrow_array_stream():
     assert_equal(array_data.length, 5)
     assert_equal(len(array_data.children), 2)
 
-    var col1_array = array_data.children[0][].as_int64()
+    var col1_array = array_data.children[0][].copy().as_int64()
     assert_equal(col1_array.unsafe_get(0), 1)
     assert_equal(col1_array.unsafe_get(4), 5)
 
-    var col2_array = array_data.children[1][].as_string()
+    var col2_array = array_data.children[1][].copy().as_string()
     assert_equal(String(col2_array.unsafe_get(0)), "a")
     assert_equal(String(col2_array.unsafe_get(4)), "e")
 
@@ -270,7 +270,7 @@ def test_numeric_dtypes():
     for i in range(len(types_to_test)):
         var type_pair = types_to_test[i]
         var py_type = type_pair[0]
-        var expected_mojo_type = type_pair[1]
+        ref expected_mojo_type = type_pair[1]
 
         var c_schema = CArrowSchema.from_pyarrow(py_type)
         var dtype = c_schema.to_dtype()

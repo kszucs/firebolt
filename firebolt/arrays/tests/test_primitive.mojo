@@ -29,10 +29,10 @@ def test_boolean_array():
     assert_true(a.is_valid(2))
     assert_true(a.is_valid(3))
 
-    var d = a.as_data()
+    var d = a^.take_data()
     assert_equal(d.length, 4)
 
-    var b = d.as_primitive[bool_]()
+    var b = d^.as_primitive[bool_]()
 
 
 def test_append():
@@ -63,7 +63,7 @@ def test_drop_null() -> None:
     # Check the setup.
     assert_equal(primitive_array.null_count(), 5)
     assert_bitmap_set(
-        primitive_array.bitmap[], List[Int](1, 3, 5, 7, 9), "check setup"
+        primitive_array.bitmap()[], List[Int](1, 3, 5, 7, 9), "check setup"
     )
 
     primitive_array.drop_nulls[DType.uint8]()
@@ -71,7 +71,7 @@ def test_drop_null() -> None:
     assert_equal(primitive_array.unsafe_get(1), 3)
     assert_equal(primitive_array.null_count(), 0)
     assert_bitmap_set(
-        primitive_array.bitmap[], List[Int](0, 1, 2, 3, 4), "after drop"
+        primitive_array.bitmap()[], List[Int](0, 1, 2, 3, 4), "after drop"
     )
 
 
@@ -90,9 +90,9 @@ def test_primitive_array_with_offset():
     assert_equal(arr.unsafe_get(0), 100)
     assert_equal(arr.unsafe_get(1), 200)
 
-    # Create array with offset
+    # Create a copy of array with offset, should point to the same buffers.
     var arr_data = arr.as_data()
-    var arr_with_offset = PrimitiveArray[int32](arr_data^, offset=2)
+    var arr_with_offset = PrimitiveArray[int32](arr_data[].copy(), offset=2)
     assert_equal(arr_with_offset.offset, 2)
 
     # Test that offset affects get operations

@@ -15,7 +15,7 @@ def test_list_type():
 
 
 def test_field():
-    var field = dt.Field("a", dt.int64)
+    var field = dt.Field("a", dt.int64, False)
     var writer = String()
     writer.write(field)
     var expected = (
@@ -27,10 +27,16 @@ def test_field():
 
 
 def test_struct_type():
-    s1 = dt.struct_(dt.Field("a", dt.int64), dt.Field("b", dt.int32))
-    s2 = dt.struct_(dt.Field("a", dt.int64), dt.Field("b", dt.int32))
+    s1 = dt.struct_(
+        dt.Field("a", dt.int64, False), dt.Field("b", dt.int32, False)
+    )
+    s2 = dt.struct_(
+        dt.Field("a", dt.int64, False), dt.Field("b", dt.int32, False)
+    )
     s3 = dt.struct_(
-        dt.Field("a", dt.int64), dt.Field("b", dt.int32), dt.Field("c", dt.int8)
+        dt.Field("a", dt.int64, False),
+        dt.Field("b", dt.int32, False),
+        dt.Field("c", dt.int8, False),
     )
     assert_true(s1 == s2)
     assert_false(s1 == s3)

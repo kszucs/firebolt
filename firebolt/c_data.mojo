@@ -97,7 +97,7 @@ struct CArrowSchema(Copyable, Movable, Representable, Stringable, Writable):
 
             for i in range(n_children):
                 var child = CArrowSchema.from_field(dtype.fields[i])
-                children[i].init_pointee_move(child)
+                children[i].init_pointee_move(child^)
         else:
             fmt = ""
             # constrained[False, "Unknown dtype"]()
@@ -170,7 +170,7 @@ struct CArrowSchema(Copyable, Movable, Representable, Stringable, Writable):
             return string
         elif fmt == "+l":
             var field = self.children[0][].to_field()
-            return list_(field.dtype)
+            return list_(field.dtype.copy())
         elif fmt == "+s":
             var fields = List[Field]()
             for i in range(self.n_children):
@@ -185,7 +185,7 @@ struct CArrowSchema(Copyable, Movable, Representable, Stringable, Writable):
         )
         var dtype = self.to_dtype()
         var nullable = self.flags & ARROW_FLAG_NULLABLE
-        return Field(String(name), dtype, nullable != 0)
+        return Field(String(name), dtype^, nullable != 0)
 
     fn write_to[W: Writer](self, mut writer: W):
         """
@@ -275,16 +275,16 @@ struct CArrowArray(Copyable, Movable):
 
         var children = List[ArcPointer[ArrayData]]()
         for i in range(self.n_children):
-            var child_field = dtype.fields[i]
+            var child_field = dtype.fields[i].copy()
             var child_array = self.children[i][].to_array(child_field.dtype)
             children.append(ArcPointer(child_array^))
 
         return ArrayData(
-            dtype=dtype,
+            dtype=dtype.copy(),
             length=Int(self.length),
             bitmap=bitmap,
-            buffers=buffers,
-            children=children,
+            buffers=buffers^,
+            children=children^,
             offset=Int(self.offset),
         )
 

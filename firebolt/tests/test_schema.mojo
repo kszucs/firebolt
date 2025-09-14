@@ -21,38 +21,39 @@ def test_schema_primitive_fields():
 
     # Create a schema with different data types
     fields = List[Field](
-        Field("field1", int8),
-        Field("field2", int16),
-        Field("field3", int32),
-        Field("field4", int64),
-        Field("field5", uint8),
-        Field("field6", uint16),
-        Field("field7", uint32),
-        Field("field8", uint64),
-        Field("field9", float16),
-        Field("field10", float32),
-        Field("field11", float64),
-        Field("field12", binary),
-        Field("field13", string),
+        Field("field1", int8, False),
+        Field("field2", int16, False),
+        Field("field3", int32, False),
+        Field("field4", int64, False),
+        Field("field5", uint8, False),
+        Field("field6", uint16, False),
+        Field("field7", uint32, False),
+        Field("field8", uint64, False),
+        Field("field9", float16, False),
+        Field("field10", float32, False),
+        Field("field11", float64, False),
+        Field("field12", binary, False),
+        Field("field13", string, False),
     )
+    var nb_fields = len(fields)
 
-    var schema = Schema(fields=fields)
+    var schema = Schema(fields=fields^)
 
     # Check the number of fields in the schema
-    assert_equal(len(schema.fields), len(fields))
+    assert_equal(len(schema.fields), nb_fields)
 
     # Check the names of the fields in the schema
-    for i in range(len(fields)):
+    for i in range(nb_fields):
         assert_equal(schema.field(index=i).name, "field" + String(i + 1))
 
 
 def test_schema_names() -> None:
     fields = List[Field](
-        Field("field1", int8),
-        Field("field2", int16),
+        Field("field1", int8, False),
+        Field("field2", int16, False),
     )
 
-    var schema = Schema(fields=fields)
+    var schema = Schema(fields=fields^)
     assert_equal(
         schema.names(),
         List[String](["field{}".format(i + 1) for i in range(2)]),
@@ -88,12 +89,12 @@ def test_from_c_schema() -> None:
     assert_equal(len(schema.fields), 2)
 
     # Test first field.
-    var field_0 = schema.field(index=0)
+    ref field_0 = schema.field(index=0)
     assert_true(field_0.dtype.is_list())
     assert_true(field_0.dtype.fields[0].dtype.is_integer())
 
     # Test second field.
-    var field_1 = schema.field(index=1)
+    ref field_1 = schema.field(index=1)
     assert_true(field_1.dtype.is_struct())
     assert_equal(field_1.dtype.fields[0].name, "field_a")
     assert_equal(field_1.dtype.fields[1].name, "field_b")
