@@ -49,7 +49,7 @@ def test_append():
 def test_array_from_ints():
     var g = array[int8](1, 2)
     assert_equal(len(g), 2)
-    assert_equal(g.dtype, int8)
+    assert_equal(materialize[g.dtype](), materialize[int8]())
     assert_equal(g.unsafe_get(0), 1)
     assert_equal(g.unsafe_get(1), 2)
 

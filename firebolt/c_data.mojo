@@ -56,35 +56,35 @@ struct CArrowSchema(Copyable, Movable, Representable, Stringable, Writable):
         var n_children: Int64 = 0
         var children = UnsafePointer[UnsafePointer[CArrowSchema]]()
 
-        if dtype == null:
+        if dtype == materialize[null]():
             fmt = "n"
-        elif dtype == bool_:
+        elif dtype == materialize[bool_]():
             fmt = "b"
-        elif dtype == int8:
+        elif dtype == materialize[int8]():
             fmt = "c"
-        elif dtype == uint8:
+        elif dtype == materialize[uint8]():
             fmt = "C"
-        elif dtype == int16:
+        elif dtype == materialize[int16]():
             fmt = "s"
-        elif dtype == uint16:
+        elif dtype == materialize[uint16]():
             fmt = "S"
-        elif dtype == int32:
+        elif dtype == materialize[int32]():
             fmt = "i"
-        elif dtype == uint32:
+        elif dtype == materialize[uint32]():
             fmt = "I"
-        elif dtype == int64:
+        elif dtype == materialize[int64]():
             fmt = "l"
-        elif dtype == uint64:
+        elif dtype == materialize[uint64]():
             fmt = "L"
-        elif dtype == float16:
+        elif dtype == materialize[float16]():
             fmt = "e"
-        elif dtype == float32:
+        elif dtype == materialize[float32]():
             fmt = "f"
-        elif dtype == float64:
+        elif dtype == materialize[float64]():
             fmt = "g"
-        elif dtype == binary:
+        elif dtype == materialize[binary]():
             fmt = "z"
-        elif dtype == string:
+        elif dtype == materialize[string]():
             fmt = "u"
         elif dtype.is_struct():
             print("EEE")
@@ -139,35 +139,35 @@ struct CArrowSchema(Copyable, Movable, Representable, Stringable, Writable):
         )
         # TODO(kszucs): not the nicest, but dictionary literals are not supported yet
         if fmt == "n":
-            return null
+            return materialize[null]()
         elif fmt == "b":
-            return bool_
+            return materialize[bool_]()
         elif fmt == "c":
-            return int8
+            return materialize[int8]()
         elif fmt == "C":
-            return uint8
+            return materialize[uint8]()
         elif fmt == "s":
-            return int16
+            return materialize[int16]()
         elif fmt == "S":
-            return uint16
+            return materialize[uint16]()
         elif fmt == "i":
-            return int32
+            return materialize[int32]()
         elif fmt == "I":
-            return uint32
+            return materialize[uint32]()
         elif fmt == "l":
-            return int64
+            return materialize[int64]()
         elif fmt == "L":
-            return uint64
+            return materialize[uint64]()
         elif fmt == "e":
-            return float16
+            return materialize[float16]()
         elif fmt == "f":
-            return float32
+            return materialize[float32]()
         elif fmt == "g":
-            return float64
+            return materialize[float64]()
         elif fmt == "z":
-            return binary
+            return materialize[binary]()
         elif fmt == "u":
-            return string
+            return materialize[string]()
         elif fmt == "+l":
             var field = self.children[0][].to_field()
             return list_(field.dtype.copy())
@@ -251,10 +251,10 @@ struct CArrowArray(Copyable, Movable):
             bitmap[].unsafe_range_set(0, self.length, True)
 
         var buffers = List[ArcPointer[Buffer]]()
-        if dtype.is_numeric() or dtype == bool_:
+        if dtype.is_numeric() or dtype == materialize[bool_]():
             var buffer = Buffer.view(self.buffers[1], self.length, dtype.native)
             buffers.append(ArcPointer(buffer^))
-        elif dtype == string:
+        elif dtype == materialize[string]():
             var offsets = Buffer.view(
                 self.buffers[1], self.length + 1, DType.uint32
             )

@@ -62,7 +62,7 @@ struct Buffer(Movable):
     @staticmethod
     fn alloc[I: Intable, //, T: DType = DType.uint8](length: I) -> Buffer:
         var size = _required_bytes(Int(length), T)
-        var ptr = UnsafePointer[UInt8, alignment=64].alloc(size)
+        var ptr = UnsafePointer[UInt8].alloc[alignment=64](size)
         memset_zero(ptr.bitcast[UInt8](), size)
         return Buffer(ptr, size)
 

@@ -20,7 +20,7 @@ fn build_list_of_list[data_type: DataType]() raises -> ListArray:
         buffer[].unsafe_set[data_type.native](i, i + 1)
 
     var value_data = ArrayData(
-        dtype=data_type,
+        dtype=materialize[data_type](),
         length=10,
         bitmap=bitmap,
         buffers=List(buffer),
@@ -42,7 +42,7 @@ fn build_list_of_list[data_type: DataType]() raises -> ListArray:
     list_bitmap[].unsafe_range_set(0, 6, True)
     list_bitmap[].unsafe_set(3, False)
     var list_data = ArrayData(
-        dtype=list_(data_type),
+        dtype=list_(materialize[data_type]()),
         length=6,
         buffers=List(value_offset),
         children=List(ArcPointer(value_data^)),
@@ -60,7 +60,7 @@ fn build_list_of_list[data_type: DataType]() raises -> ListArray:
     top_bitmap[].unsafe_range_set(0, 4, True)
     return ListArray(
         ArrayData(
-            dtype=list_(list_(data_type)),
+            dtype=list_(list_(materialize[data_type]())),
             length=4,
             buffers=List(ArcPointer(top_offsets^)),
             children=List(ArcPointer(list_data^)),
@@ -76,7 +76,7 @@ def test_list_int_array():
     ints.append(2)
     ints.append(3)
     var lists = ListArray(ints^)
-    assert_equal(lists.data.dtype, list_(int64))
+    assert_equal(lists.data.dtype, list_(materialize[int64]()))
 
     var first_value = lists.unsafe_get(0)
     assert_equal(first_value.__str__().strip(), "1 2 3")
@@ -137,9 +137,9 @@ def test_list_of_list():
 
 def test_struct_array():
     var fields = List[Field](
-        Field("id", int64),
-        Field("name", string),
-        Field("active", bool_),
+        Field("id", materialize[int64]()),
+        Field("name", materialize[string]()),
+        Field("active", materialize[bool_]()),
     )
 
     var struct_arr = StructArray(fields^, capacity=10)
@@ -169,8 +169,8 @@ def test_list_array_str_repr():
 
 def test_struct_array_str_repr():
     var fields = List[Field](
-        Field("id", int64),
-        Field("name", string),
+        Field("id", materialize[int64]()),
+        Field("name", materialize[string]()),
     )
 
     var struct_arr = StructArray(fields^, capacity=5)

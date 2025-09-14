@@ -25,7 +25,7 @@ def test_array_data_with_offset():
 
     # Create ArrayData with offset=2
     var array_data = ArrayData(
-        dtype=int8,
+        dtype=materialize[int8](),
         length=3,
         bitmap=bitmap,
         buffers=List(buffer),
@@ -48,7 +48,7 @@ def test_array_data_fieldwise_init():
 
     # Test creating ArrayData with all fields specified including offset
     var array_data = ArrayData(
-        dtype=int8,
+        dtype=materialize[int8](),
         length=5,
         bitmap=bitmap,
         buffers=List(buffer),
@@ -56,7 +56,7 @@ def test_array_data_fieldwise_init():
         offset=3,
     )
 
-    assert_equal(array_data.dtype, int8)
+    assert_equal(array_data.dtype, materialize[int8]())
     assert_equal(array_data.length, 5)
     assert_equal(array_data.offset, 3)
 
@@ -81,7 +81,7 @@ def test_array_data_write_to_with_offset():
 
         # Create ArrayData with offset=1, so logical indices 0,1,2 map to physical indices 1,2,3
         var array_data = ArrayData(
-            dtype=dtype,
+            dtype=materialize[dtype](),
             length=3,
             bitmap=bitmap,
             buffers=List(buffer),
