@@ -55,6 +55,14 @@ def test_buffer_set_get():
     assert_equal(buf.unsafe_get[DType.uint16](1), 44)
 
 
+def test_buffer_from_values():
+    var buf = Buffer.from_values[DType.int64](-3, 9, 81)
+
+    assert_equal(buf.unsafe_get[DType.int64](0), -3)
+    assert_equal(buf.unsafe_get[DType.int64](1), 9)
+    assert_equal(buf.unsafe_get[DType.int64](2), 81)
+
+
 def test_buffer_swap():
     var one = Buffer.alloc(10)
     one.unsafe_set(0, 111)

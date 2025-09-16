@@ -33,6 +33,23 @@ struct ArrayData(Copyable, Movable, Representable, Stringable, Writable):
     var children: List[ArcPointer[ArrayData]]
     var offset: Int
 
+    @staticmethod
+    fn from_buffer[
+        dtype: DataType
+    ](var buffer: Buffer, length: Int) -> ArrayData:
+        """Build an ArrayData from a buffer where all the values are not null.
+        """
+        var bitmap = Bitmap.alloc(length)
+        bitmap.unsafe_range_set(0, length, True)
+        return ArrayData(
+            dtype=materialize[dtype](),
+            length=length,
+            bitmap=ArcPointer(bitmap^),
+            buffers=List(ArcPointer(buffer^)),
+            children=List[ArcPointer[ArrayData]](),
+            offset=0,
+        )
+
     fn __copyinit__(out self, existing: Self):
         self.dtype = existing.dtype.copy()
         self.length = existing.length

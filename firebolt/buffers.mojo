@@ -67,6 +67,16 @@ struct Buffer(Movable):
         return Buffer(ptr, size)
 
     @staticmethod
+    fn from_values[dtype: DType](*values: Scalar[dtype]) -> Buffer:
+        """Build a buffer from a list of values."""
+        var buffer = Self.alloc[dtype](len(values))
+
+        for i in range(len(values)):
+            buffer.unsafe_set[dtype](i, values[i])
+
+        return buffer^
+
+    @staticmethod
     fn view[
         I: Intable, //
     ](

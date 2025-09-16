@@ -29,14 +29,9 @@ fn build_list_of_list[data_type: DataType]() raises -> ListArray:
     )
 
     # Define the PrimitiveArrays.
-    var value_offset = ArcPointer(Buffer.alloc(7))
-    value_offset[].unsafe_set[DType.int32](0, 0)
-    value_offset[].unsafe_set[DType.int32](1, 2)
-    value_offset[].unsafe_set[DType.int32](2, 4)
-    value_offset[].unsafe_set[DType.int32](3, 7)
-    value_offset[].unsafe_set[DType.int32](4, 7)
-    value_offset[].unsafe_set[DType.int32](5, 8)
-    value_offset[].unsafe_set[DType.int32](6, 10)
+    var value_offset = ArcPointer(
+        Buffer.from_values[DType.int32](0, 2, 4, 7, 7, 8, 10)
+    )
 
     var list_bitmap = ArcPointer(Bitmap.alloc(6))
     list_bitmap[].unsafe_range_set(0, 6, True)
@@ -51,11 +46,7 @@ fn build_list_of_list[data_type: DataType]() raises -> ListArray:
     )
 
     # Now define the master array data.
-    var top_offsets = Buffer.alloc(4)
-    top_offsets.unsafe_set[DType.int32](0, 0)
-    top_offsets.unsafe_set[DType.int32](1, 2)
-    top_offsets.unsafe_set[DType.int32](2, 5)
-    top_offsets.unsafe_set[DType.int32](3, 6)
+    var top_offsets = Buffer.from_values[DType.int32](0, 2, 5, 6)
     var top_bitmap = ArcPointer(Bitmap.alloc(4))
     top_bitmap[].unsafe_range_set(0, 4, True)
     return ListArray(
@@ -71,10 +62,11 @@ fn build_list_of_list[data_type: DataType]() raises -> ListArray:
 
 
 def test_list_int_array():
-    var ints = Int64Array(capacity=3)
-    ints.append(1)
-    ints.append(2)
-    ints.append(3)
+    var ints = Int64Array(
+        ArrayData.from_buffer[int64](
+            Buffer.from_values[DType.int64](1, 2, 3), 3
+        )
+    )
     var lists = ListArray(ints^)
     assert_equal(lists.data.dtype, list_(materialize[int64]()))
 
