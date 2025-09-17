@@ -175,5 +175,40 @@ def test_struct_array_str_repr():
     assert_equal(str_repr, repr_repr)
 
 
+def build_struct() -> StructArray:
+    var int_data_a = ArrayData.from_buffer[int32](
+        Buffer.from_values[DType.int32](1, 2, 3, 4, 5), 5
+    )
+    var field_1 = Field("int_data_a", materialize[int32]())
+
+    var int_data_b = ArrayData.from_buffer[int32](
+        Buffer.from_values[DType.int32](10, 20, 30), 3
+    )
+    var field_2 = Field("int_data_b", materialize[int32]())
+    bitmap = Bitmap.alloc(2)
+    bitmap.unsafe_range_set(0, 2, True)
+    var struct_array_data = ArrayData(
+        dtype=struct_(List(field_1^, field_2^)),
+        length=2,
+        bitmap=ArcPointer(bitmap^),
+        offset=0,
+        buffers=List[ArcPointer[Buffer]](),
+        children=List(ArcPointer(int_data_a^), ArcPointer(int_data_b^)),
+    )
+    return StructArray(data=struct_array_data^)
+
+
+def test_struct_array_unsafe_get():
+    var struct_array = build_struct()
+    ref int_data_a = struct_array.unsafe_get("int_data_a")
+    var int_a = Int32Array(int_data_a.copy())
+    assert_equal(int_a.unsafe_get(0), 1)
+    assert_equal(int_a.unsafe_get(4), 5)
+    ref int_data_b = struct_array.unsafe_get("int_data_b")
+    var int_b = Int32Array(int_data_b.copy())
+    assert_equal(int_b.unsafe_get(0), 10)
+    assert_equal(int_b.unsafe_get(2), 30)
+
+
 fn main() raises:
     test_list_of_list()

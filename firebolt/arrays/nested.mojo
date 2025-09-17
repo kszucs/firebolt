@@ -153,6 +153,11 @@ struct StructArray(Array):
             offset=0,
         )
 
+    fn __init__(out self, *, var data: ArrayData):
+        self.fields = data.dtype.fields.copy()
+        self.capacity = data.length
+        self.data = data^
+
     fn __moveinit__(out self, deinit existing: Self):
         self.data = existing.data^
         self.fields = existing.fields^
@@ -184,6 +189,19 @@ struct StructArray(Array):
         writer.write("length=")
         writer.write(self.data.length)
         writer.write(")")
+
+    fn _index_for_field_name(self, name: StringSlice) raises -> Int:
+        for idx, ref field in enumerate(self.data.dtype.fields):
+            if field.name == name:
+                return idx
+
+        raise Error("Field {} does not exist in this StructArray.".format(name))
+
+    fn unsafe_get(
+        self, name: StringSlice
+    ) raises -> ref [self.data.children[0]] ArrayData:
+        """Access the field with the given name in the struct."""
+        return self.data.children[self._index_for_field_name(name)][]
 
     fn __str__(self) -> String:
         return String.write(self)
