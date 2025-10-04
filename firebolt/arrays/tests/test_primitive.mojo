@@ -147,7 +147,7 @@ def test_primitive_array_offset_with_validity():
 def test_primitive_array_nulls_with_offset():
     """Test PrimitiveArray.nulls static method creates array with default offset.
     """
-    var null_arr = Int64Array.nulls[int64](5)
+    var null_arr = Int64Array.nulls(5)
     assert_equal(null_arr.offset, 0)
     assert_equal(null_arr.data.offset, 0)
 

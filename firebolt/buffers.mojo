@@ -94,7 +94,11 @@ struct Buffer(Movable):
             return
 
         var new = Buffer.alloc[T](target_length)
-        memcpy(new.ptr.bitcast[UInt8](), self.ptr.bitcast[UInt8](), self.size)
+        memcpy(
+            dest=new.ptr.bitcast[UInt8](),
+            src=self.ptr.bitcast[UInt8](),
+            count=self.size,
+        )
         self.swap(new)
 
     fn __del__(deinit self):

@@ -1,6 +1,5 @@
 from .primitive import *
 from ..buffers import Buffer, Bitmap
-from sys.info import sizeof
 
 
 trait Array(Movable, Representable, Sized, Stringable, Writable):

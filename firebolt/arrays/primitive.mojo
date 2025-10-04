@@ -42,9 +42,9 @@ fn drop_nulls[
 
         # Compact the data.
         memcpy(
-            buffer[].get_ptr_at(start),
-            buffer[].get_ptr_at(end_nulls),
-            values_len * size_of[T](),
+            dest=buffer[].get_ptr_at(start),
+            src=buffer[].get_ptr_at(end_nulls),
+            count=values_len * size_of[T](),
         )
         # Adjust the bitmp.
         var new_values_start = start
@@ -146,7 +146,7 @@ struct PrimitiveArray[T: DataType](Array):
         self.data.length += 1
 
     @staticmethod
-    fn nulls[T: DataType](size: Int) raises -> PrimitiveArray[T]:
+    fn nulls(size: Int) raises -> PrimitiveArray[T]:
         """Creates a new PrimitiveArray filled with null values."""
         var bitmap = Bitmap.alloc(size)
         bitmap.unsafe_range_set(0, size, False)
@@ -175,12 +175,12 @@ struct PrimitiveArray[T: DataType](Array):
         for value in values:
             self.unsafe_append(value)
 
-    fn drop_nulls[T: DType](mut self) -> None:
+    fn drop_nulls[dtype: DType](mut self) -> None:
         """Drops null values from the Array.
 
         Currently we drop nulls from individual buffers, we do not delete buffers.
         """
-        drop_nulls[T](
+        drop_nulls[dtype](
             self.data.buffers[0], self.data.bitmap, 0, self.data.length
         )
         self.data.length = self.bitmap()[].buffer.bit_count()

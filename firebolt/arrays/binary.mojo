@@ -81,7 +81,7 @@ struct StringArray(Array):
         self.values()[].grow[DType.uint8](next_offset)
         var dst_address = self.values()[].get_ptr_at(Int(last_offset))
         var src_address = value.unsafe_ptr()
-        memcpy(dst_address, src_address, len(value))
+        memcpy(dest=dst_address, src=src_address, count=len(value))
 
     fn unsafe_get(self, index: UInt) -> StringSlice[__origin_of(self)]:
         var start_offset = self.offsets()[].unsafe_get[DType.uint32](
@@ -107,7 +107,7 @@ struct StringArray(Array):
 
         var dst_address = self.values()[].get_ptr_at(Int(start_offset))
         var src_address = value.unsafe_ptr()
-        memcpy(dst_address, src_address, length)
+        memcpy(dest=dst_address, src=src_address, count=length)
 
     fn write_to[W: Writer](self, mut writer: W):
         """
