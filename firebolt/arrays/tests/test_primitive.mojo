@@ -222,10 +222,7 @@ def test_primitive_array_write_to_large_array():
 
 def test_primitive_array_str():
     """Test __str__ method returns formatted string representation."""
-    var arr = Int32Array(5)
-    arr.append(42)
-    arr.append(84)
-    arr.append(126)
+    var arr = array[int32](42, 84, 126)
 
     var result = arr.__str__()
     assert_true("PrimitiveArray(" in result)

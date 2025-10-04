@@ -60,6 +60,23 @@ assert_equal(len(lists), 1)
 assert_equal(lists.data.dtype, list_(int64))
 ```
 
+### Formatting arrays for display
+
+```mojo
+from firebolt.io import Formatter
+from firebolt.arrays import array
+from firebolt.dtypes import int32
+
+var arr = array[int32](1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+var output = String()
+var formatter = Formatter(limit=3)  # Show first 3 elements
+formatter.format(output, arr)
+print(output)
+# Output: PrimitiveArray[DataType(code=int32)]([1, 2, 3, ...])
+```
+
+The formatter supports all array types including nested structures like lists and structs, and automatically handles NULL values.
+
 ### Zero-copy access of a PyArrow array in Mojo
 
 For more details see the [Arrow C Data Interface](https://arrow.apache.org/docs/format/CDataInterface.html).

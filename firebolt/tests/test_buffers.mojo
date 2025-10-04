@@ -133,6 +133,11 @@ def _reset(mut bitmap: Bitmap):
 def test_unsafe_range_set():
     var bitmap = Bitmap.alloc(16)
 
+    bitmap.unsafe_range_set(0, 10, True)
+    assert_bitmap_set(bitmap, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], "range 0-10")
+    bitmap.unsafe_range_set(0, 10, False)
+    assert_bitmap_set(bitmap, [], "reset")
+
     bitmap.unsafe_range_set(0, 0, True)
     assert_bitmap_set(bitmap, [], "range 0")
 
@@ -283,3 +288,7 @@ def test_bitmap_moveinit_with_offset():
     var moved_bitmap = bitmap^
     assert_equal(moved_bitmap.offset, 2)
     assert_true(moved_bitmap.unsafe_get(0))
+
+
+def main():
+    test_unsafe_range_set()
