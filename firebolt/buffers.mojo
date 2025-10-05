@@ -166,7 +166,7 @@ struct Buffer(Movable):
         return count
 
 
-struct Bitmap(Movable, Writable):
+struct Bitmap(Movable, Representable, Stringable, Writable):
 
     """Hold information about the null records in an array."""
 
@@ -205,6 +205,16 @@ struct Bitmap(Movable, Writable):
             if i > 16:
                 writer.write("...")
                 break
+
+    fn __str__(self) -> String:
+        var output = String()
+        output.write(self)
+        return output
+
+    fn __repr__(self) -> String:
+        var output = String()
+        output.write(self)
+        return output
 
     fn unsafe_get(self, index: Int) -> Bool:
         return self.buffer.unsafe_get[DType.bool](index + self.offset)
@@ -414,7 +424,6 @@ struct Bitmap(Movable, Writable):
                     start_index += 1
                 if bit_pos_end != 0:
                     self.partial_byte_set(end_index, 0, bit_pos_end, value)
-                    end_index -= 1
 
         # Now take care of the full bytes.
         if end_index > start_index:

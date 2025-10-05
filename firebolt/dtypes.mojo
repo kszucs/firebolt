@@ -424,3 +424,17 @@ alias float32 = DataType(code=FLOAT32, native=DType.float32)
 alias float64 = DataType(code=FLOAT64, native=DType.float64)
 alias string = DataType(code=STRING)
 alias binary = DataType(code=BINARY)
+
+alias all_numeric_dtypes = [
+    int8,
+    int16,
+    int32,
+    int64,
+    uint8,
+    uint16,
+    uint32,
+    uint64,
+    float16,
+    float32,
+    float64,
+]

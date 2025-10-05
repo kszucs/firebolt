@@ -4,61 +4,7 @@ from testing import assert_equal, assert_true, assert_false
 from firebolt.arrays import *
 from firebolt.dtypes import *
 from firebolt.test_fixtures.bool_array import as_bool_array_scalar
-
-
-fn build_list_of_list[data_type: DataType]() raises -> ListArray:
-    """Build a test ListArray.
-
-    See: https://elferherrera.github.io/arrow_guide/arrays_nested.html
-    """
-
-    # Define all the values.
-    var bitmap = ArcPointer(Bitmap.alloc(10))
-    bitmap[].unsafe_range_set(0, 10, True)
-    var buffer = ArcPointer(Buffer.alloc[data_type.native](10))
-    for i in range(10):
-        buffer[].unsafe_set[data_type.native](i, i + 1)
-
-    var value_data = ArrayData(
-        dtype=materialize[data_type](),
-        length=10,
-        bitmap=bitmap,
-        buffers=List(buffer),
-        children=List[ArcPointer[ArrayData]](),
-        offset=0,
-    )
-
-    # Define the PrimitiveArrays.
-    var value_offset = ArcPointer(
-        Buffer.from_values[DType.int32](0, 2, 4, 7, 7, 8, 10)
-    )
-
-    var list_bitmap = ArcPointer(Bitmap.alloc(6))
-    list_bitmap[].unsafe_range_set(0, 6, True)
-    list_bitmap[].unsafe_set(3, False)
-    var list_data = ArrayData(
-        dtype=list_(materialize[data_type]()),
-        length=6,
-        buffers=List(value_offset),
-        children=List(ArcPointer(value_data^)),
-        bitmap=list_bitmap,
-        offset=0,
-    )
-
-    # Now define the master array data.
-    var top_offsets = Buffer.from_values[DType.int32](0, 2, 5, 6)
-    var top_bitmap = ArcPointer(Bitmap.alloc(4))
-    top_bitmap[].unsafe_range_set(0, 4, True)
-    return ListArray(
-        ArrayData(
-            dtype=list_(list_(materialize[data_type]())),
-            length=4,
-            buffers=List(ArcPointer(top_offsets^)),
-            children=List(ArcPointer(list_data^)),
-            bitmap=top_bitmap,
-            offset=0,
-        )
-    )
+from firebolt.test_fixtures.arrays import build_list_of_list, build_struct
 
 
 def test_list_int_array():
@@ -173,29 +119,6 @@ def test_struct_array_str_repr():
     assert_equal(str_repr, "StructArray(length=0)")
     assert_equal(repr_repr, "StructArray(length=0)")
     assert_equal(str_repr, repr_repr)
-
-
-def build_struct() -> StructArray:
-    var int_data_a = ArrayData.from_buffer[int32](
-        Buffer.from_values[DType.int32](1, 2, 3, 4, 5), 5
-    )
-    var field_1 = Field("int_data_a", materialize[int32]())
-
-    var int_data_b = ArrayData.from_buffer[int32](
-        Buffer.from_values[DType.int32](10, 20, 30), 3
-    )
-    var field_2 = Field("int_data_b", materialize[int32]())
-    bitmap = Bitmap.alloc(2)
-    bitmap.unsafe_range_set(0, 2, True)
-    var struct_array_data = ArrayData(
-        dtype=struct_(List(field_1^, field_2^)),
-        length=2,
-        bitmap=ArcPointer(bitmap^),
-        offset=0,
-        buffers=List[ArcPointer[Buffer]](),
-        children=List(ArcPointer(int_data_a^), ArcPointer(int_data_b^)),
-    )
-    return StructArray(data=struct_array_data^)
 
 
 def test_struct_array_unsafe_get():
