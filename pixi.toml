@@ -12,6 +12,8 @@ package = "mojo package firebolt -o package/firebolt.mojopkg"
 
 [dependencies]
 mojo = "<1.0.0"
+# Python 3.14 breaks the pyarrow installation, stay on an older version.
+python = "3.12.*"
 
 [pypi-dependencies]
 pyarrow = ">=19.0.1, <21"
