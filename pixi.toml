@@ -6,14 +6,20 @@ platforms = ["osx-arm64", "linux-64"]
 version = "0.1.0"
 
 [tasks]
-test = "mojo test firebolt -I ."
-fmt = "mojo format firebolt"
+test_mojo = {cmd = "mojo test firebolt -I ." }
+test_python = {cmd = "pytest -s -v pybolt/tests" }
+test = {depends-on = ["test_mojo", "test_python"]}
+fmt_mojo = {cmd = "mojo format firebolt"}
+fmt_python = {cmd = "ruff format pybolt" }
+fmt = {depends-on = ["fmt_mojo", "fmt_python"]}
 package = "mojo package firebolt -o package/firebolt.mojopkg"
 
 [dependencies]
 mojo = "<1.0.0"
 # Python 3.14 breaks the pyarrow installation, stay on an older version.
 python = "3.12.*"
+pytest = "8.*"
+ruff = "0.14.*"
 
 [pypi-dependencies]
 pyarrow = ">=19.0.1, <21"
