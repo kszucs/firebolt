@@ -1,6 +1,7 @@
 from python import PythonObject, Python
 from python.bindings import PythonModuleBuilder
 import math
+from pybolt.dtypes import add_to_module as add_dtypes
 from os import abort
 
 
@@ -8,6 +9,7 @@ from os import abort
 fn PyInit_pybolt() -> PythonObject:
     try:
         var m = PythonModuleBuilder("pybolt")
+        add_dtypes(m)
         m.def_function[to_pydict](
             "to_pydict",
             docstring="Transform a firebolt structure to python dictionary.",
