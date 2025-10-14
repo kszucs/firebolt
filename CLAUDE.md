@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Firebolt is an implementation of Apache Arrow in Mojo. Apache Arrow is a cross-language development platform for in-memory data with a standardized columnar memory format. This implementation is in early/experimental stages as Mojo itself is under heavy development.
 
+For information about the Mojo programming language and the standard library see https://github.com/modular/modular
+
 ## Build System & Commands
 
 This project uses **pixi** as the package manager. All commands are run through pixi:
@@ -84,10 +86,12 @@ firebolt/
 │   ├── binary.mojo       # StringArray, BinaryArray (variable-length)
 │   ├── nested.mojo       # ListArray, StructArray
 │   └── chunked_array.mojo # ChunkedArray (multiple ArrayData)
+|-- module                # Export functions for the python module in pybolt
 ├── c_data.mojo           # Arrow C Data Interface
 ├── schema.mojo           # Schema with Fields and metadata
 ├── tests/                # Core module tests
 └── test_fixtures/        # Shared test utilities
+pybolt/                   # The Python module top level
 ```
 
 ## Implementation Patterns
