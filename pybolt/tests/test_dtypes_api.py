@@ -1,22 +1,22 @@
 """Test the DataType Python api."""
 
-import pybolt
+import pybolt as pb
 
 
 def test_factory_functions() -> None:
-    """Test that all DataType factory functions work and return correct types."""
-    assert isinstance(pybolt.null(), pybolt.DataType)
-    assert isinstance(pybolt.bool_(), pybolt.DataType)
-    assert isinstance(pybolt.int8(), pybolt.DataType)
-    assert isinstance(pybolt.int16(), pybolt.DataType)
-    assert isinstance(pybolt.int32(), pybolt.DataType)
-    assert isinstance(pybolt.int64(), pybolt.DataType)
-    assert isinstance(pybolt.uint8(), pybolt.DataType)
-    assert isinstance(pybolt.uint16(), pybolt.DataType)
-    assert isinstance(pybolt.uint32(), pybolt.DataType)
-    assert isinstance(pybolt.uint64(), pybolt.DataType)
-    assert isinstance(pybolt.float16(), pybolt.DataType)
-    assert isinstance(pybolt.float32(), pybolt.DataType)
-    assert isinstance(pybolt.float64(), pybolt.DataType)
-    assert isinstance(pybolt.string(), pybolt.DataType)
-    assert isinstance(pybolt.binary(), pybolt.DataType)
+    """Test that all DataType factory functions work and return DataType."""
+    assert isinstance(pb.null(), pb.DataType)
+    assert isinstance(pb.bool_(), pb.DataType)
+    assert isinstance(pb.int8(), pb.DataType)
+    assert isinstance(pb.int16(), pb.DataType)
+    assert isinstance(pb.int32(), pb.DataType)
+    assert isinstance(pb.int64(), pb.DataType)
+    assert isinstance(pb.uint8(), pb.DataType)
+    assert isinstance(pb.uint16(), pb.DataType)
+    assert isinstance(pb.uint32(), pb.DataType)
+    assert isinstance(pb.uint64(), pb.DataType)
+    assert isinstance(pb.float16(), pb.DataType)
+    assert isinstance(pb.float32(), pb.DataType)
+    assert isinstance(pb.float64(), pb.DataType)
+    assert isinstance(pb.string(), pb.DataType)
+    assert isinstance(pb.binary(), pb.DataType)
