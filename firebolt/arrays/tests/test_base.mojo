@@ -1,5 +1,5 @@
 """Test the base module."""
-from testing import assert_true, assert_false, assert_equal
+from testing import assert_true, assert_false, assert_equal, TestSuite
 from memory import UnsafePointer, ArcPointer
 from firebolt.arrays.base import ArrayData
 from firebolt.buffers import Buffer, Bitmap
@@ -92,3 +92,7 @@ def test_array_data_write_to_with_offset():
         var writer = String()
         writer.write(array_data)
         assert_equal(writer.strip(), "10 11 12")
+
+
+def main():
+    TestSuite.discover_tests[__functions_in_module()]().run()

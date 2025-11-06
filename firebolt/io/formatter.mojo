@@ -59,7 +59,7 @@ struct Formatter:
                 break
 
             if value.is_valid(i):
-                writer.write(value.unsafe_get(i))
+                writer.write(value.unsafe_get(UInt(i)))
             else:
                 writer.write("NULL")
         writer.write("])")

@@ -49,7 +49,7 @@ struct Schema(Copyable, Movable):
         *,
         index: Optional[Int] = None,
         name: Optional[
-            StringSlice[mut=False, origin=ImmutableAnyOrigin]
+            StringSlice[mut=False, origin=ImmutAnyOrigin]
         ] = None,
     ) raises -> ref [self.fields] Field:
         """Returns the field at the given index or with the given name."""

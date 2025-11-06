@@ -1,4 +1,4 @@
-from testing import assert_equal, assert_true, assert_false
+from testing import assert_equal, assert_true, assert_false, TestSuite
 
 from firebolt.arrays import *
 from firebolt.dtypes import *
@@ -157,3 +157,7 @@ def test_array_with_nulls():
     assert_equal(
         output, "PrimitiveArray[DataType(code=int32)]([1, 2, NULL, ...])"
     )
+
+
+def main():
+    TestSuite.discover_tests[__functions_in_module()]().run()

@@ -1,5 +1,5 @@
 """Test the schema.mojo file."""
-from testing import assert_equal, assert_true
+from testing import assert_equal, assert_true, TestSuite
 from python import Python, PythonObject
 from firebolt.schema import Schema
 from firebolt.dtypes import (
@@ -98,3 +98,7 @@ def test_from_c_schema() -> None:
     assert_true(field_1.dtype.is_struct())
     assert_equal(field_1.dtype.fields[0].name, "field_a")
     assert_equal(field_1.dtype.fields[1].name, "field_b")
+
+
+def main():
+    TestSuite.discover_tests[__functions_in_module()]().run()

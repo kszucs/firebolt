@@ -8,7 +8,7 @@ trait Array(Movable, Representable, Sized, Stringable, Writable):
         pass
 
     fn as_data[
-        self_origin: ImmutableOrigin
+        self_origin: ImmutOrigin
     ](ref [self_origin]self) -> UnsafePointer[ArrayData, mut=False]:
         """Return a read only reference to the ArrayData wrapped by self.
 

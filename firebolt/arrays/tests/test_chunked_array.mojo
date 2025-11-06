@@ -1,6 +1,6 @@
 """Test the chunked array implementation."""
 
-from testing import assert_equal
+from testing import assert_equal, TestSuite
 from firebolt.arrays.base import ArrayData
 from firebolt.buffers import Buffer, Bitmap
 from firebolt.arrays.chunked_array import ChunkedArray
@@ -45,3 +45,7 @@ def test_combine_chunked_array():
     assert_equal(combined_array.dtype, materialize[int8]())
     # Ensure that the last element of the last buffer has the expected value.
     assert_equal(combined_array.buffers[1][].unsafe_get(1), 1)
+
+
+def main():
+    TestSuite.discover_tests[__functions_in_module()]().run()

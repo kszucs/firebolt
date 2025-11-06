@@ -1,4 +1,4 @@
-[project]
+[workspace]
 authors = ["Krisztian Szucs <szucs.krisztian@gmail.com>"]
 channels = ["conda-forge", "https://conda.modular.com/max-nightly"]
 name = "firebolt"
@@ -7,7 +7,7 @@ version = "0.1.0"
 
 [tasks]
 build_pybolt = {cmd="mojo build -I . pybolt/pybolt.mojo --emit shared-lib -o pybolt/pybolt.so"}
-test_mojo = {cmd = "mojo test firebolt -I ." }
+test_mojo = {cmd = "bash run_tests.sh" }
 test_python = {cmd = "pytest -s -v pybolt/tests", depends-on=["build_pybolt"]}
 test = {depends-on = ["test_mojo", "test_python"]}
 fmt_mojo = {cmd = "mojo format firebolt"}
