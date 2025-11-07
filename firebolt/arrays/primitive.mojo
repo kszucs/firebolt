@@ -114,7 +114,7 @@ struct PrimitiveArray[T: DataType](Array):
         return self.data^
 
     fn as_data[
-        self_origin: ImmutableOrigin
+        self_origin: ImmutOrigin
     ](ref [self_origin]self) -> UnsafePointer[ArrayData, mut=False]:
         return UnsafePointer(to=self.data)
 

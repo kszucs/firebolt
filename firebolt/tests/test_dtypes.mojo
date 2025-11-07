@@ -1,4 +1,4 @@
-from testing import assert_equal, assert_true, assert_false
+from testing import assert_equal, assert_true, assert_false, TestSuite
 import firebolt.dtypes as dt
 
 
@@ -118,3 +118,7 @@ def test_bitwidth():
     assert_equal(materialize[dt.float32]().bitwidth(), 32)
     assert_equal(materialize[dt.float64]().bitwidth(), 64)
     assert_equal(dt.list_(materialize[dt.int64]()).bitwidth(), 0)
+
+
+def main():
+    TestSuite.discover_tests[__functions_in_module()]().run()

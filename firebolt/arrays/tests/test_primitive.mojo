@@ -1,4 +1,4 @@
-from testing import assert_equal, assert_true, assert_false
+from testing import assert_equal, assert_true, assert_false, TestSuite
 
 
 from firebolt.arrays import *
@@ -268,3 +268,7 @@ def test_primitive_array_repr():
             " buffer=[1, 3, 5, NULL, ])"
         ),
     )
+
+
+def main():
+    TestSuite.discover_tests[__functions_in_module()]().run()

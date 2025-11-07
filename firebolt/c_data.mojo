@@ -134,7 +134,7 @@ struct CArrowSchema(Copyable, Movable, Representable, Stringable, Writable):
         )
 
     fn to_dtype(self) raises -> DataType:
-        var fmt = StringSlice[__origin_of(self.format)](
+        var fmt = StringSlice[origin_of(self.format)](
             unsafe_from_utf8_ptr=self.format
         )
         # TODO(kszucs): not the nicest, but dictionary literals are not supported yet
@@ -180,7 +180,7 @@ struct CArrowSchema(Copyable, Movable, Representable, Stringable, Writable):
             raise Error("Unknown format: " + fmt)
 
     fn to_field(self) raises -> Field:
-        var name = StringSlice[__origin_of(self)](
+        var name = StringSlice[origin_of(self)](
             unsafe_from_utf8_ptr=self.name
         )
         var dtype = self.to_dtype()

@@ -1,5 +1,4 @@
-from testing import assert_equal, assert_true, assert_false
-from sys.info import alignof
+from testing import assert_equal, assert_true, assert_false, TestSuite
 from firebolt.test_fixtures.arrays import assert_bitmap_set
 
 from firebolt.buffers import *
@@ -291,4 +290,4 @@ def test_bitmap_moveinit_with_offset():
 
 
 def main():
-    test_unsafe_range_set()
+    TestSuite.discover_tests[__functions_in_module()]().run()

@@ -1,4 +1,4 @@
-from testing import assert_equal, assert_true, assert_false
+from testing import assert_equal, assert_true, assert_false, TestSuite
 
 
 from firebolt.arrays import *
@@ -133,5 +133,5 @@ def test_struct_array_unsafe_get():
     assert_equal(int_b.unsafe_get(2), 30)
 
 
-fn main() raises:
-    test_list_of_list()
+def main():
+    TestSuite.discover_tests[__functions_in_module()]().run()

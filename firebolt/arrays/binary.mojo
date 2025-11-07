@@ -53,7 +53,7 @@ struct StringArray(Array):
         return self.data.length
 
     fn as_data[
-        self_origin: ImmutableOrigin
+        self_origin: ImmutOrigin
     ](ref [self_origin]self) -> UnsafePointer[ArrayData, mut=False]:
         return UnsafePointer(to=self.data)
 
@@ -83,16 +83,13 @@ struct StringArray(Array):
         var src_address = value.unsafe_ptr()
         memcpy(dest=dst_address, src=src_address, count=len(value))
 
-    fn unsafe_get(self, index: UInt) -> StringSlice[__origin_of(self)]:
-        var start_offset = self.offsets()[].unsafe_get[DType.uint32](
-            index + self.data.offset
-        )
-        var end_offset = self.offsets()[].unsafe_get[DType.uint32](
-            index + 1 + self.data.offset
-        )
+    fn unsafe_get(self, index: UInt) -> StringSlice[origin_of(self)]:
+        var offset_idx = Int(index) + self.data.offset
+        var start_offset = self.offsets()[].unsafe_get[DType.uint32](offset_idx)
+        var end_offset = self.offsets()[].unsafe_get[DType.uint32](offset_idx + 1)
         var address = self.values()[].get_ptr_at(Int(start_offset))
-        var length = UInt(Int(end_offset - start_offset))
-        return StringSlice[__origin_of(self)](ptr=address, length=length)
+        var length = Int(end_offset) - Int(start_offset)
+        return StringSlice[origin_of(self)](ptr=address, length=length)
 
     fn unsafe_set(mut self, index: Int, value: String) raises:
         var start_offset = self.offsets()[].unsafe_get[DType.int32](index)
@@ -125,7 +122,7 @@ struct StringArray(Array):
         writer.write(", data= [")
         for i in range(self.data.length):
             writer.write('"')
-            writer.write(self.unsafe_get((i)))
+            writer.write(self.unsafe_get(UInt(i)))
             writer.write('", ')
             if i > 1:
                 break

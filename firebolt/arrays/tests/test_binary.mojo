@@ -1,4 +1,4 @@
-from testing import assert_equal, assert_true, assert_false
+from testing import assert_equal, assert_true, assert_false, TestSuite
 
 
 from firebolt.arrays import *
@@ -26,3 +26,7 @@ def test_string_builder():
         a.__str__().strip(),
         'StringArray( length=2, data= ["hello", "world",  ])',
     )
+
+
+def main():
+    TestSuite.discover_tests[__functions_in_module()]().run()

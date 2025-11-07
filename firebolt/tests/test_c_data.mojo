@@ -1,4 +1,4 @@
-from testing import assert_equal, assert_true, assert_false
+from testing import assert_equal, assert_true, assert_false, TestSuite
 from python import Python, PythonObject
 from firebolt.c_data import *
 
@@ -290,3 +290,7 @@ def test_numeric_dtypes():
 #         var c_schema = CArrowSchema.from_dtype(int32)
 #     except Error:
 #         pass
+
+
+def main():
+    TestSuite.discover_tests[__functions_in_module()]().run()
