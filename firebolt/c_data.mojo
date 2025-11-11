@@ -1,4 +1,4 @@
-from sys.ffi import external_call, DLHandle, c_char
+from sys.ffi import external_call, c_char
 from memory import UnsafePointer, ArcPointer, memcpy
 from sys import size_of
 
@@ -180,9 +180,7 @@ struct CArrowSchema(Copyable, Movable, Representable, Stringable, Writable):
             raise Error("Unknown format: " + fmt)
 
     fn to_field(self) raises -> Field:
-        var name = StringSlice[origin_of(self)](
-            unsafe_from_utf8_ptr=self.name
-        )
+        var name = StringSlice[origin_of(self)](unsafe_from_utf8_ptr=self.name)
         var dtype = self.to_dtype()
         var nullable = self.flags & ARROW_FLAG_NULLABLE
         return Field(String(name), dtype^, nullable != 0)
