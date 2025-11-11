@@ -86,7 +86,9 @@ struct StringArray(Array):
     fn unsafe_get(self, index: UInt) -> StringSlice[origin_of(self)]:
         var offset_idx = Int(index) + self.data.offset
         var start_offset = self.offsets()[].unsafe_get[DType.uint32](offset_idx)
-        var end_offset = self.offsets()[].unsafe_get[DType.uint32](offset_idx + 1)
+        var end_offset = self.offsets()[].unsafe_get[DType.uint32](
+            offset_idx + 1
+        )
         var address = self.values()[].get_ptr_at(Int(start_offset))
         var length = Int(end_offset) - Int(start_offset)
         return StringSlice[origin_of(self)](ptr=address, length=length)

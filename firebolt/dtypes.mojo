@@ -1,4 +1,5 @@
 from io.write import Writable, Writer
+from sys import size_of
 
 # The following enum codes are copied from the C++ implementation of Arrow
 
@@ -438,3 +439,31 @@ alias all_numeric_dtypes = [
     float32,
     float64,
 ]
+
+
+fn dynamic_size_of(dtype: DType) -> Int:
+    """Get size of a dtype by dispatching to compile-time size_of."""
+    if dtype == DType.bool:
+        return size_of[DType.bool]()
+    elif dtype == DType.int8:
+        return size_of[DType.int8]()
+    elif dtype == DType.int16:
+        return size_of[DType.int16]()
+    elif dtype == DType.int32:
+        return size_of[DType.int32]()
+    elif dtype == DType.int64:
+        return size_of[DType.int64]()
+    elif dtype == DType.uint8:
+        return size_of[DType.uint8]()
+    elif dtype == DType.uint16:
+        return size_of[DType.uint16]()
+    elif dtype == DType.uint32:
+        return size_of[DType.uint32]()
+    elif dtype == DType.uint64:
+        return size_of[DType.uint64]()
+    elif dtype == DType.float32:
+        return size_of[DType.float32]()
+    elif dtype == DType.float64:
+        return size_of[DType.float64]()
+    debug_assert(False, "Can't get the size of ", dtype)
+    return 0

@@ -1,6 +1,7 @@
 from memory import UnsafePointer, memset_zero, memcpy, ArcPointer, Span, memset
 from sys.info import simd_byte_width
 from sys import size_of
+from firebolt.dtypes import dynamic_size_of
 import math
 from bit import pop_count, count_trailing_zeros
 
@@ -10,7 +11,7 @@ fn _required_bytes(length: Int, T: DType) -> Int:
     if T is DType.bool:
         size = math.ceildiv(length, 8)
     else:
-        size = length * T.size_of()
+        size = length * dynamic_size_of(T)
     return math.align_up(size, 64)
 
 
@@ -81,7 +82,7 @@ struct Buffer(Movable):
         I: Intable, //
     ](
         ptr: UnsafePointer[NoneType], length: I, dtype: DType = DType.uint8
-    ) -> Buffer:
+    ) raises -> Buffer:
         var size = _required_bytes(Int(length), dtype)
         return Buffer(ptr.bitcast[UInt8](), size, owns=False)
 
