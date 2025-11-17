@@ -29,8 +29,8 @@ I find the Mojo language really promising and Arrow should be a first-class citi
 ### Creating a primitive array
 
 ```mojo
-from firebolt.arrays import array, StringArray, ListArray, Int64Array
-from firebolt.dtypes import int8, bool_, list_
+from marrow.arrays import array, StringArray, ListArray, Int64Array
+from marrow.dtypes import int8, bool_, list_
 
 var a = array[int8](1, 2, 3, 4)
 var b = array[bool_](True, False, True)
@@ -63,9 +63,9 @@ assert_equal(lists.data.dtype, list_(int64))
 ### Formatting arrays for display
 
 ```mojo
-from firebolt.io import Formatter
-from firebolt.arrays import array
-from firebolt.dtypes import int32
+from marrow.io import Formatter
+from marrow.arrays import array
+from marrow.dtypes import int32
 
 var arr = array[int32](1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
 var output = String()

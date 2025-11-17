@@ -1,4 +1,4 @@
-name: Firebolt Test
+name: Marrow Test
 
 on:
   - push
