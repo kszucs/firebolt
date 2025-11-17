@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Firebolt is an implementation of Apache Arrow in Mojo. Apache Arrow is a cross-language development platform for in-memory data with a standardized columnar memory format. This implementation is in early/experimental stages as Mojo itself is under heavy development.
+Marrow is an implementation of Apache Arrow in Mojo. Apache Arrow is a cross-language development platform for in-memory data with a standardized columnar memory format. This implementation is in early/experimental stages as Mojo itself is under heavy development.
 
 For information about the Mojo programming language and the standard library see https://github.com/modular/modular
 
@@ -27,8 +27,8 @@ pixi run package
 
 To run tests for a specific module:
 ```bash
-mojo test firebolt/tests/test_dtypes.mojo -I .
-mojo test firebolt/arrays/tests/test_primitive.mojo -I .
+mojo test marrow/tests/test_dtypes.mojo -I .
+mojo test marrow/arrays/tests/test_primitive.mojo -I .
 ```
 
 The `-I .` flag is important as it adds the current directory to the import path.
@@ -37,7 +37,7 @@ The `-I .` flag is important as it adds the current directory to the import path
 
 ### Memory Ownership Model
 
-The codebase follows a strict ownership hierarchy (documented in `firebolt/MEMORY.md`):
+The codebase follows a strict ownership hierarchy (documented in `marrow/MEMORY.md`):
 
 1. **ArrayData** - Low-level structure that owns:
    - Data type (`dtype`)
@@ -58,18 +58,18 @@ The codebase follows a strict ownership hierarchy (documented in `firebolt/MEMOR
 
 ### Key Abstractions
 
-**Buffer & Bitmap** (`firebolt/buffers.mojo`):
+**Buffer & Bitmap** (`marrow/buffers.mojo`):
 - `Buffer` - Manages contiguous memory regions with reference counting via `ArcPointer`
 - `Bitmap` - Tracks null/validity for array elements using bit-packing
 - Both use 64-byte alignment for SIMD optimization
 
-**DataType** (`firebolt/dtypes.mojo`):
+**DataType** (`marrow/dtypes.mojo`):
 - Enum-based type system matching Arrow specification
 - Supports primitive types (bool, int8-64, uint8-64, float32/64)
 - Nested types via `list_(DataType)` and `struct_(Field, ...)`
 - Uses `code` field for type identification and optional `native` field for DType mapping
 
-**C Data Interface** (`firebolt/c_data.mojo`):
+**C Data Interface** (`marrow/c_data.mojo`):
 - `CArrowSchema` and `CArrowArray` for zero-copy data exchange
 - Primary use case: interop with PyArrow via `from_pyarrow()` and `to_pyarrow()`
 - Release callbacks not yet fully implemented (Mojo limitation with C function callbacks)
@@ -77,7 +77,7 @@ The codebase follows a strict ownership hierarchy (documented in `firebolt/MEMOR
 ### Directory Structure
 
 ```
-firebolt/
+marrow/
 ├── dtypes.mojo           # Type system (DataType, Field)
 ├── buffers.mojo          # Memory management (Buffer, Bitmap)
 ├── arrays/
@@ -86,12 +86,12 @@ firebolt/
 │   ├── binary.mojo       # StringArray, BinaryArray (variable-length)
 │   ├── nested.mojo       # ListArray, StructArray
 │   └── chunked_array.mojo # ChunkedArray (multiple ArrayData)
-|-- module                # Export functions for the python module in pybolt
+|-- module                # Export functions for the python module
 ├── c_data.mojo           # Arrow C Data Interface
 ├── schema.mojo           # Schema with Fields and metadata
 ├── tests/                # Core module tests
 └── test_fixtures/        # Shared test utilities
-pybolt/                   # The Python module top level
+python/                   # The Python module top level
 ```
 
 ## Implementation Patterns
@@ -100,7 +100,7 @@ pybolt/                   # The Python module top level
 
 ```mojo
 # From values (primitive)
-from firebolt.arrays import array
+from marrow.arrays import array
 var a = array[int8](1, 2, 3, 4)
 
 # Building incrementally (string)

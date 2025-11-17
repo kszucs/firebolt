@@ -3,7 +3,7 @@
 # Run tests, see https://forum.modular.com/t/proposal-deprecating-mojo-test/2371
 set -e
 
-# Get test directory from first argument, default to firebolt if not provided
+# Get test directory from first argument, default to marrow if not provided
 test_dir="${1:-.}"
 
 echo "### ------------------------------------------------------------- ###"
