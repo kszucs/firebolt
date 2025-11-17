@@ -6,9 +6,9 @@ platforms = ["osx-arm64", "linux-64"]
 version = "0.1.0"
 
 [tasks]
-build_marrow = {cmd="mojo build -I . python/marrow.mojo --emit shared-lib -o marrow/marrow.so"}
+build_python = {cmd="mojo build -I . python/lib.mojo --emit shared-lib -o python/marrow.so"}
 test_mojo = {cmd = "bash run_tests.sh" }
-test_python = {cmd = "pytest -s -v marrow/tests", depends-on=["build_marrow"]}
+test_python = {cmd = "pytest -s -v python/tests", depends-on=["build_python"]}
 test = {depends-on = ["test_mojo", "test_python"]}
 fmt_mojo = {cmd = "mojo format marrow"}
 fmt_python = {cmd = "ruff format python" }
