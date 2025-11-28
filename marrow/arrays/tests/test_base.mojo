@@ -1,6 +1,6 @@
 """Test the base module."""
 from testing import assert_true, assert_false, assert_equal, TestSuite
-from memory import UnsafePointer, ArcPointer
+from memory import LegacyUnsafePointer, ArcPointer
 from marrow.arrays.base import ArrayData
 from marrow.buffers import Buffer, Bitmap
 from marrow.dtypes import DType, int8, uint8, int64

@@ -64,18 +64,18 @@ fn drop_nulls[
 struct PrimitiveArray[T: DataType](Array):
     """An Arrow array of primitive types."""
 
-    alias dtype = T
-    alias scalar = Scalar[T.native]
+    comptime dtype = Self.T
+    comptime scalar = Scalar[Self.T.native]
     var data: ArrayData
     var offset: Int
     var capacity: Int
 
     fn __init__(out self, var data: ArrayData, offset: Int = 0) raises:
         # TODO(kszucs): put a dtype constraint here
-        if data.dtype != materialize[T]():
+        if data.dtype != materialize[Self.T]():
             raise Error(
                 "Unexpected dtype '{}' instead of '{}'.".format(
-                    data.dtype, materialize[T]()
+                    data.dtype, materialize[Self.T]()
                 )
             )
         elif len(data.buffers) != 1:
@@ -89,9 +89,9 @@ struct PrimitiveArray[T: DataType](Array):
         self.capacity = capacity
         self.offset = offset
         bitmap = ArcPointer(Bitmap.alloc(capacity))
-        buffer = ArcPointer(Buffer.alloc[T.native](capacity))
+        buffer = ArcPointer(Buffer.alloc[Self.T.native](capacity))
         self.data = ArrayData(
-            dtype=materialize[T](),
+            dtype=materialize[Self.T](),
             length=0,
             bitmap=bitmap,
             buffers=List(buffer),
@@ -115,12 +115,12 @@ struct PrimitiveArray[T: DataType](Array):
 
     fn as_data[
         self_origin: ImmutOrigin
-    ](ref [self_origin]self) -> UnsafePointer[ArrayData, mut=False]:
-        return UnsafePointer(to=self.data)
+    ](ref [self_origin]self) -> LegacyUnsafePointer[ArrayData, mut=False]:
+        return LegacyUnsafePointer(to=self.data)
 
     fn grow(mut self, capacity: Int):
         self.bitmap()[].grow(capacity)
-        self.buffer()[].grow[T.native](capacity)
+        self.buffer()[].grow[Self.T.native](capacity)
         self.capacity = capacity
 
     @always_inline
@@ -133,12 +133,12 @@ struct PrimitiveArray[T: DataType](Array):
 
     @always_inline
     fn unsafe_get(self, index: Int) -> Self.scalar:
-        return self.buffer()[].unsafe_get[T.native](index + self.offset)
+        return self.buffer()[].unsafe_get[Self.T.native](index + self.offset)
 
     @always_inline
     fn unsafe_set(mut self, index: Int, value: Self.scalar):
         self.bitmap()[].unsafe_set(index + self.offset, True)
-        self.buffer()[].unsafe_set[T.native](index + self.offset, value)
+        self.buffer()[].unsafe_set[Self.T.native](index + self.offset, value)
 
     @always_inline
     fn unsafe_append(mut self, value: Self.scalar):
@@ -146,14 +146,14 @@ struct PrimitiveArray[T: DataType](Array):
         self.data.length += 1
 
     @staticmethod
-    fn nulls(size: Int) raises -> PrimitiveArray[T]:
+    fn nulls(size: Int) raises -> PrimitiveArray[Self.T]:
         """Creates a new PrimitiveArray filled with null values."""
         var bitmap = Bitmap.alloc(size)
         bitmap.unsafe_range_set(0, size, False)
-        var buffer = Buffer.alloc[T.native](size)
-        return PrimitiveArray[T](
+        var buffer = Buffer.alloc[Self.T.native](size)
+        return PrimitiveArray[Self.T](
             data=ArrayData(
-                dtype=materialize[T](),
+                dtype=materialize[Self.T](),
                 length=size,
                 bitmap=ArcPointer(bitmap^),
                 buffers=List(ArcPointer(buffer^)),
@@ -211,7 +211,7 @@ struct PrimitiveArray[T: DataType](Array):
         for i in range(self.capacity):
             if self.is_valid(i):
                 writer.write(
-                    self.buffer()[].unsafe_get[T.native](i + self.offset)
+                    self.buffer()[].unsafe_get[Self.T.native](i + self.offset)
                 )
             else:
                 writer.write("NULL")
@@ -228,14 +228,14 @@ struct PrimitiveArray[T: DataType](Array):
         return String.write(self)
 
 
-alias BoolArray = PrimitiveArray[bool_]
-alias Int8Array = PrimitiveArray[int8]
-alias Int16Array = PrimitiveArray[int16]
-alias Int32Array = PrimitiveArray[int32]
-alias Int64Array = PrimitiveArray[int64]
-alias UInt8Array = PrimitiveArray[uint8]
-alias UInt16Array = PrimitiveArray[uint16]
-alias UInt32Array = PrimitiveArray[uint32]
-alias UInt64Array = PrimitiveArray[uint64]
-alias Float32Array = PrimitiveArray[float32]
-alias Float64Array = PrimitiveArray[float64]
+comptime BoolArray = PrimitiveArray[bool_]
+comptime Int8Array = PrimitiveArray[int8]
+comptime Int16Array = PrimitiveArray[int16]
+comptime Int32Array = PrimitiveArray[int32]
+comptime Int64Array = PrimitiveArray[int64]
+comptime UInt8Array = PrimitiveArray[uint8]
+comptime UInt16Array = PrimitiveArray[uint16]
+comptime UInt32Array = PrimitiveArray[uint32]
+comptime UInt64Array = PrimitiveArray[uint64]
+comptime Float32Array = PrimitiveArray[float32]
+comptime Float64Array = PrimitiveArray[float64]

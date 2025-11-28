@@ -1,4 +1,11 @@
-from memory import UnsafePointer, memset_zero, memcpy, ArcPointer, Span, memset
+from memory import (
+    LegacyUnsafePointer,
+    memset_zero,
+    memcpy,
+    ArcPointer,
+    Span,
+    memset,
+)
 from sys.info import simd_byte_width
 from sys import size_of
 from marrow.dtypes import dynamic_size_of
@@ -15,20 +22,20 @@ fn _required_bytes(length: Int, T: DType) -> Int:
     return math.align_up(size, 64)
 
 
-alias simd_width = simd_byte_width()
+comptime simd_width = simd_byte_width()
 
-alias simd_widths = (simd_width, simd_width // 2, 1)
+comptime simd_widths = (simd_width, simd_width // 2, 1)
 
 
 struct Buffer(Movable):
-    var ptr: UnsafePointer[UInt8]
+    var ptr: LegacyUnsafePointer[UInt8]
     var size: Int
     var owns: Bool
     var offset: Int
 
     fn __init__(
         out self,
-        ptr: UnsafePointer[UInt8],
+        ptr: LegacyUnsafePointer[UInt8],
         size: Int,
         owns: Bool = True,
         offset: Int = 0,
@@ -63,7 +70,7 @@ struct Buffer(Movable):
     @staticmethod
     fn alloc[I: Intable, //, T: DType = DType.uint8](length: I) -> Buffer:
         var size = _required_bytes(Int(length), T)
-        var ptr = UnsafePointer[UInt8].alloc(size, alignment=64)
+        var ptr = alloc[UInt8](size, alignment=64)
         memset_zero(ptr.bitcast[UInt8](), size)
         return Buffer(ptr, size)
 
@@ -81,13 +88,15 @@ struct Buffer(Movable):
     fn view[
         I: Intable, //
     ](
-        ptr: UnsafePointer[NoneType], length: I, dtype: DType = DType.uint8
+        ptr: LegacyUnsafePointer[NoneType],
+        length: I,
+        dtype: DType = DType.uint8,
     ) raises -> Buffer:
         var size = _required_bytes(Int(length), dtype)
         return Buffer(ptr.bitcast[UInt8](), size, owns=False)
 
     @always_inline
-    fn get_ptr_at(self, index: Int) -> UnsafePointer[UInt8]:
+    fn get_ptr_at(self, index: Int) -> LegacyUnsafePointer[UInt8]:
         return (self.ptr + index).bitcast[UInt8]()
 
     fn grow[I: Intable, //, T: DType = DType.uint8](mut self, target_length: I):
@@ -116,7 +125,7 @@ struct Buffer(Movable):
 
     @always_inline
     fn unsafe_get[T: DType = DType.uint8](self, index: Int) -> Scalar[T]:
-        alias output = Scalar[T]
+        comptime output = Scalar[T]
 
         @parameter
         if T is DType.bool:
@@ -144,7 +153,7 @@ struct Buffer(Movable):
             else:
                 self.ptr[byte_index] = byte & ~(1 << bit_index)
         else:
-            alias output = Scalar[T]
+            comptime output = Scalar[T]
             self.ptr.bitcast[output]()[index + self.offset] = value
 
     fn bit_count(self) -> Int:
@@ -298,7 +307,7 @@ struct Bitmap(Movable, Representable, Stringable, Writable):
 
             @parameter
             for width_index in range(len(simd_widths)):
-                alias width = simd_widths[width_index]
+                comptime width = simd_widths[width_index]
                 if self.size() - index >= width:
                     var loaded = self.buffer.get_ptr_at(index).load[
                         width=width
