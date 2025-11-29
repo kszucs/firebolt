@@ -5,17 +5,17 @@ from ..buffers import Buffer, Bitmap
 trait Array(Movable, Representable, Sized, Stringable, Writable):
     fn take_data(deinit self) -> ArrayData:
         """Construct an ArrayData by consuming self."""
-        pass
+        ...
 
     fn as_data[
         self_origin: ImmutOrigin
-    ](ref [self_origin]self) -> UnsafePointer[ArrayData, mut=False]:
+    ](ref [self_origin]self) -> LegacyUnsafePointer[ArrayData, mut=False]:
         """Return a read only reference to the ArrayData wrapped by self.
 
         Note that ideally the output type would be `ref [self_origin] ArrayData` but this is not supported yet.
         https://forum.modular.com/t/how-to-mark-a-trait-as-applying-to-not-register-passable/2265/6?u=mseritan
         """
-        pass
+        ...
 
 
 @fieldwise_init

@@ -54,7 +54,7 @@ The codebase follows a strict ownership hierarchy (documented in `marrow/MEMORY.
 
 3. **Array Trait** - All typed arrays implement:
    - `fn take_data(deinit self) -> ArrayData` - Consumes self to create standalone ArrayData
-   - `fn as_data[self_origin](ref [self_origin]self) -> UnsafePointer[ArrayData]` - Read-only reference to wrapped ArrayData
+   - `fn as_data[self_origin](ref [self_origin]self) -> LegacyUnsafePointer[ArrayData]` - Read-only reference to wrapped ArrayData
 
 ### Key Abstractions
 

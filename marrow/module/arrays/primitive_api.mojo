@@ -20,16 +20,17 @@ struct PrimitiveArray(Movable, Representable):
         return "PrimitiveArray"
 
     @staticmethod
-    fn __len__(self_ptr: UnsafePointer[Self]) -> PythonObject:
+    fn __len__(py_self: PythonObject) raises -> PythonObject:
         """Return the length of the underlying ArrayData."""
+        var self_ptr = py_self.downcast_value_ptr[Self]()
         return self_ptr[].data.length
 
     @staticmethod
     fn __getitem__(
-        self_ptr: UnsafePointer[Self], index: PythonObject
+        py_self: PythonObject, index: PythonObject
     ) raises -> PythonObject:
         """Access the element at the given index."""
-
+        var self_ptr = py_self.downcast_value_ptr[Self]()
         return primitive.Int64Array(self_ptr[].data.copy()).unsafe_get(
             Int(index)
         )

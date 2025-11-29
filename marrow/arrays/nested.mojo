@@ -65,8 +65,8 @@ struct ListArray(Array):
 
     fn as_data[
         self_origin: ImmutOrigin
-    ](ref [self_origin]self) -> UnsafePointer[ArrayData, mut=False]:
-        return UnsafePointer(to=self.data)
+    ](ref [self_origin]self) -> LegacyUnsafePointer[ArrayData, mut=False]:
+        return LegacyUnsafePointer(to=self.data)
 
     fn take_data(deinit self) -> ArrayData:
         return self.data^
@@ -171,8 +171,8 @@ struct StructArray(Array):
 
     fn as_data[
         self_origin: ImmutOrigin
-    ](ref [self_origin]self) -> UnsafePointer[ArrayData, mut=False]:
-        return UnsafePointer(to=self.data)
+    ](ref [self_origin]self) -> LegacyUnsafePointer[ArrayData, mut=False]:
+        return LegacyUnsafePointer(to=self.data)
 
     fn write_to[W: Writer](self, mut writer: W):
         """

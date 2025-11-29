@@ -1,4 +1,4 @@
-from memory import ArcPointer, memcpy
+from memory import ArcPointer, memcpy, Span
 from collections.string import StringSlice
 from ..buffers import Buffer
 from ..dtypes import *
@@ -54,8 +54,8 @@ struct StringArray(Array):
 
     fn as_data[
         self_origin: ImmutOrigin
-    ](ref [self_origin]self) -> UnsafePointer[ArrayData, mut=False]:
-        return UnsafePointer(to=self.data)
+    ](ref [self_origin]self) -> LegacyUnsafePointer[ArrayData, mut=False]:
+        return LegacyUnsafePointer(to=self.data)
 
     fn take_data(deinit self) -> ArrayData:
         return self.data^
@@ -83,7 +83,7 @@ struct StringArray(Array):
         var src_address = value.unsafe_ptr()
         memcpy(dest=dst_address, src=src_address, count=len(value))
 
-    fn unsafe_get(self, index: UInt) -> StringSlice[origin_of(self)]:
+    fn unsafe_get(self, index: UInt) -> StringSlice[ImmutAnyOrigin]:
         var offset_idx = Int(index) + self.data.offset
         var start_offset = self.offsets()[].unsafe_get[DType.uint32](offset_idx)
         var end_offset = self.offsets()[].unsafe_get[DType.uint32](
@@ -91,7 +91,11 @@ struct StringArray(Array):
         )
         var address = self.values()[].get_ptr_at(Int(start_offset))
         var length = Int(end_offset) - Int(start_offset)
-        return StringSlice[origin_of(self)](ptr=address, length=length)
+        return StringSlice(
+            unsafe_from_utf8=Span[Byte](
+                ptr=UnsafePointer(address).mut_cast[False](), length=length
+            )
+        )
 
     fn unsafe_set(mut self, index: Int, value: String) raises:
         var start_offset = self.offsets()[].unsafe_get[DType.int32](index)

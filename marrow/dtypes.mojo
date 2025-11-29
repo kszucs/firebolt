@@ -4,149 +4,147 @@ from sys import size_of
 # The following enum codes are copied from the C++ implementation of Arrow
 
 # A NULL type having no physical storage
-alias NA = 0
+comptime NA = 0
 
 # Boolean as 1 bit, LSB bit-packed ordering
-alias BOOL = 1
+comptime BOOL = 1
 
 # Unsigned 8-bit little-endian integer
-alias UINT8 = 2
+comptime UINT8 = 2
 
 # Signed 8-bit little-endian integer
-alias INT8 = 3
+comptime INT8 = 3
 
 # Unsigned 16-bit little-endian integer
-alias UINT16 = 4
+comptime UINT16 = 4
 
 # Signed 16-bit little-endian integer
-alias INT16 = 5
+comptime INT16 = 5
 
 # Unsigned 32-bit little-endian integer
-alias UINT32 = 6
+comptime UINT32 = 6
 
 # Signed 32-bit little-endian integer
-alias INT32 = 7
+comptime INT32 = 7
 
 # Unsigned 64-bit little-endian integer
-alias UINT64 = 8
+comptime UINT64 = 8
 
 # Signed 64-bit little-endian integer
-alias INT64 = 9
+comptime INT64 = 9
 
 # 2-byte floating point value
-alias FLOAT16 = 10
+comptime FLOAT16 = 10
 
 # 4-byte floating point value
-alias FLOAT32 = 11
+comptime FLOAT32 = 11
 
 # 8-byte floating point value
-alias FLOAT64 = 12
+comptime FLOAT64 = 12
 
 # UTF8 variable-length string as List<Char>
-alias STRING = 13
+comptime STRING = 13
 
 # Variable-length bytes (no guarantee of UTF8-ness)
-alias BINARY = 14
+comptime BINARY = 14
 
 # Fixed-size binary. Each value occupies the same number of bytes
-alias FIXED_SIZE_BINARY = 15
+comptime FIXED_SIZE_BINARY = 15
 
 # int32_t days since the UNIX epoch
-alias DATE32 = 16
+comptime DATE32 = 16
 
 # int64_t milliseconds since the UNIX epoch
-alias DATE64 = 17
+comptime DATE64 = 17
 
 # Exact timestamp encoded with int64 since UNIX epoch
 # Default unit millisecond
-alias TIMESTAMP = 18
+comptime TIMESTAMP = 18
 
 # Time as signed 32-bit integer, representing either seconds or
 # milliseconds since midnight
-alias TIME32 = 19
+comptime TIME32 = 19
 
 # Time as signed 64-bit integer, representing either microseconds or
 # nanoseconds since midnight
-alias TIME64 = 20
+comptime TIME64 = 20
 
 # YEAR_MONTH interval in SQL style
-alias INTERVAL_MONTHS = 21
+comptime INTERVAL_MONTHS = 21
 
 # DAY_TIME interval in SQL style
-alias INTERVAL_DAY_TIME = 22
+comptime INTERVAL_DAY_TIME = 22
 
 # Precision- and scale-based decimal type with 128 bits.
-alias DECIMAL128 = 23
+comptime DECIMAL128 = 23
 
 # Defined for backward-compatibility.
-alias DECIMAL = DECIMAL128
+comptime DECIMAL = DECIMAL128
 
 # Precision- and scale-based decimal type with 256 bits.
-alias DECIMAL256 = 24
+comptime DECIMAL256 = 24
 
 # A list of some logical data type
-alias LIST = 25
+comptime LIST = 25
 
 # Struct of logical types
-alias STRUCT = 26
+comptime STRUCT = 26
 
 # Sparse unions of logical types
-alias SPARSE_UNION = 27
+comptime SPARSE_UNION = 27
 
 # Dense unions of logical types
-alias DENSE_UNION = 28
+comptime DENSE_UNION = 28
 
 # Dictionary-encoded type, also called "categorical" or "factor"
 # in other programming languages. Holds the dictionary value
 # type but not the dictionary itself, which is part of the
 # ArrayData struct
-alias DICTIONARY = 29
+comptime DICTIONARY = 29
 
 # Map, a repeated struct logical type
-alias MAP = 30
+comptime MAP = 30
 
 # Custom data type, implemented by user
-alias EXTENSION = 31
+comptime EXTENSION = 31
 
 # Fixed size list of some logical type
-alias FIXED_SIZE_LIST = 32
+comptime FIXED_SIZE_LIST = 32
 
 # Measure of elapsed time in either seconds, milliseconds, microseconds
 # or nanoseconds.
-alias DURATION = 33
+comptime DURATION = 33
 
 # Like STRING, but with 64-bit offsets
-alias LARGE_STRING = 34
+comptime LARGE_STRING = 34
 
 # Like BINARY, but with 64-bit offsets
-alias LARGE_BINARY = 35
+comptime LARGE_BINARY = 35
 
 # Like LIST, but with 64-bit offsets
-alias LARGE_LIST = 36
+comptime LARGE_LIST = 36
 
 # Calendar interval type with three fields.
-alias INTERVAL_MONTH_DAY_NANO = 37
+comptime INTERVAL_MONTH_DAY_NANO = 37
 
 # Run-end encoded data.
-alias RUN_END_ENCODED = 38
+comptime RUN_END_ENCODED = 38
 
 # String (UTF8) view type with 4-byte prefix and inline small string
 # optimization
-alias STRING_VIEW = 39
+comptime STRING_VIEW = 39
 
 # Bytes view type with 4-byte prefix and inline small string optimization
-alias BINARY_VIEW = 40
+comptime BINARY_VIEW = 40
 
 # A list of some logical data type represented by offset and size.
-alias LIST_VIEW = 41
+comptime LIST_VIEW = 41
 
 # Like LIST_VIEW, but with 64-bit offsets and sizes
-alias LARGE_LIST_VIEW = 42
+comptime LARGE_LIST_VIEW = 42
 
 
-struct Field(
-    Copyable, EqualityComparable, Movable, Representable, Stringable, Writable
-):
+struct Field(Copyable, Equatable, Movable, Representable, Stringable, Writable):
     var name: String
     var dtype: DataType
     var nullable: Bool
@@ -198,7 +196,7 @@ struct Field(
 
 
 struct DataType(
-    Copyable, EqualityComparable, Movable, Representable, Stringable, Writable
+    Copyable, Equatable, Movable, Representable, Stringable, Writable
 ):
     var code: UInt8
     var native: DType
@@ -410,23 +408,23 @@ fn struct_(var *fields: Field) -> DataType:
     return DataType(code=STRUCT, fields=List(elements=fields^))
 
 
-alias null = DataType(code=NA)
-alias bool_ = DataType(code=BOOL, native=DType.bool)
-alias int8 = DataType(code=INT8, native=DType.int8)
-alias int16 = DataType(code=INT16, native=DType.int16)
-alias int32 = DataType(code=INT32, native=DType.int32)
-alias int64 = DataType(code=INT64, native=DType.int64)
-alias uint8 = DataType(code=UINT8, native=DType.uint8)
-alias uint16 = DataType(code=UINT16, native=DType.uint16)
-alias uint32 = DataType(code=UINT32, native=DType.uint32)
-alias uint64 = DataType(code=UINT64, native=DType.uint64)
-alias float16 = DataType(code=FLOAT16, native=DType.float16)
-alias float32 = DataType(code=FLOAT32, native=DType.float32)
-alias float64 = DataType(code=FLOAT64, native=DType.float64)
-alias string = DataType(code=STRING)
-alias binary = DataType(code=BINARY)
+comptime null = DataType(code=NA)
+comptime bool_ = DataType(code=BOOL, native=DType.bool)
+comptime int8 = DataType(code=INT8, native=DType.int8)
+comptime int16 = DataType(code=INT16, native=DType.int16)
+comptime int32 = DataType(code=INT32, native=DType.int32)
+comptime int64 = DataType(code=INT64, native=DType.int64)
+comptime uint8 = DataType(code=UINT8, native=DType.uint8)
+comptime uint16 = DataType(code=UINT16, native=DType.uint16)
+comptime uint32 = DataType(code=UINT32, native=DType.uint32)
+comptime uint64 = DataType(code=UINT64, native=DType.uint64)
+comptime float16 = DataType(code=FLOAT16, native=DType.float16)
+comptime float32 = DataType(code=FLOAT32, native=DType.float32)
+comptime float64 = DataType(code=FLOAT64, native=DType.float64)
+comptime string = DataType(code=STRING)
+comptime binary = DataType(code=BINARY)
 
-alias all_numeric_dtypes = [
+comptime all_numeric_dtypes = [
     int8,
     int16,
     int32,

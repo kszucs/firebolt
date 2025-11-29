@@ -1,5 +1,5 @@
 from sys.ffi import external_call, c_char
-from memory import UnsafePointer, ArcPointer, memcpy
+from memory import LegacyUnsafePointer, ArcPointer, memcpy
 from sys import size_of
 
 import math
@@ -11,29 +11,33 @@ from io.write import Writable, Writer
 from .dtypes import *
 from .arrays import *
 
-alias ARROW_FLAG_NULLABLE = 2
+comptime ARROW_FLAG_NULLABLE = 2
 
 # This type of the function argument is really CArrowSchema but we are getting errors with: recursive reference to declaration.
-alias CSchemaReleaseFunction = fn (schema: UnsafePointer[UInt64]) -> NoneType
+comptime CSchemaReleaseFunction = fn (
+    schema: LegacyUnsafePointer[UInt64]
+) -> NoneType
 # This type of the function argument is really CArrowArray but we are getting errors with: recursive reference to declaration.
-alias CArrayReleaseFunction = fn (schema: UnsafePointer[UInt64]) -> NoneType
+comptime CArrayReleaseFunction = fn (
+    schema: LegacyUnsafePointer[UInt64]
+) -> NoneType
 
 
 @fieldwise_init
 struct CArrowSchema(Copyable, Movable, Representable, Stringable, Writable):
-    var format: UnsafePointer[c_char]
-    var name: UnsafePointer[c_char]
-    var metadata: UnsafePointer[c_char]
+    var format: LegacyUnsafePointer[c_char]
+    var name: LegacyUnsafePointer[c_char]
+    var metadata: LegacyUnsafePointer[c_char]
     var flags: Int64
     var n_children: Int64
-    var children: UnsafePointer[UnsafePointer[CArrowSchema]]
-    var dictionary: UnsafePointer[CArrowSchema]
+    var children: LegacyUnsafePointer[LegacyUnsafePointer[CArrowSchema]]
+    var dictionary: LegacyUnsafePointer[CArrowSchema]
     # TODO(kszucs): release callback must be called otherwise memory gets leaked
-    var release: UnsafePointer[CSchemaReleaseFunction]
-    var private_data: UnsafePointer[NoneType]
+    var release: LegacyUnsafePointer[CSchemaReleaseFunction]
+    var private_data: LegacyUnsafePointer[NoneType]
 
     fn __del__(deinit self):
-        var this = UnsafePointer(to=self).bitcast[UInt64]()
+        var this = LegacyUnsafePointer(to=self).bitcast[UInt64]()
         if self.release:
             # Calling the function leads to a crash.
             # self.release[](this)
@@ -41,20 +45,20 @@ struct CArrowSchema(Copyable, Movable, Representable, Stringable, Writable):
 
     @staticmethod
     fn from_pyarrow(pyobj: PythonObject) raises -> CArrowSchema:
-        var ptr = UnsafePointer[CArrowSchema].alloc(1)
+        var ptr = LegacyUnsafePointer[CArrowSchema].alloc(1)
         pyobj._export_to_c(Int(ptr))
         return ptr.take_pointee()
 
     fn to_pyarrow(self) raises -> PythonObject:
         var pa = Python.import_module("pyarrow")
-        var ptr = UnsafePointer(to=self)
+        var ptr = LegacyUnsafePointer(to=self)
         return pa.Schema._import_from_c(Int(ptr))
 
     @staticmethod
     fn from_dtype(dtype: DataType) -> CArrowSchema:
         var fmt: String
         var n_children: Int64 = 0
-        var children = UnsafePointer[UnsafePointer[CArrowSchema]]()
+        var children = LegacyUnsafePointer[LegacyUnsafePointer[CArrowSchema]]()
 
         if dtype == materialize[null]():
             fmt = "n"
@@ -91,9 +95,9 @@ struct CArrowSchema(Copyable, Movable, Representable, Stringable, Writable):
 
             fmt = "+s"
             n_children = Int(len(dtype.fields))
-            children = UnsafePointer[UnsafePointer[CArrowSchema]].alloc(
-                Int(n_children)
-            )
+            children = LegacyUnsafePointer[
+                LegacyUnsafePointer[CArrowSchema]
+            ].alloc(Int(n_children))
 
             for i in range(n_children):
                 var child = CArrowSchema.from_field(dtype.fields[i])
@@ -104,15 +108,15 @@ struct CArrowSchema(Copyable, Movable, Representable, Stringable, Writable):
 
         return CArrowSchema(
             format=fmt.unsafe_cstr_ptr(),
-            name=UnsafePointer[c_char](),
-            metadata=UnsafePointer[c_char](),
+            name=LegacyUnsafePointer[c_char](),
+            metadata=LegacyUnsafePointer[c_char](),
             flags=0,
             n_children=n_children,
             children=children,
-            dictionary=UnsafePointer[CArrowSchema](),
+            dictionary=LegacyUnsafePointer[CArrowSchema](),
             # TODO(kszucs): currently there is no way to pass a mojo callback to C
-            release=UnsafePointer[CSchemaReleaseFunction](),
-            private_data=UnsafePointer[NoneType](),
+            release=LegacyUnsafePointer[CSchemaReleaseFunction](),
+            private_data=LegacyUnsafePointer[NoneType](),
         )
 
     @staticmethod
@@ -126,17 +130,15 @@ struct CArrowSchema(Copyable, Movable, Representable, Stringable, Writable):
             metadata="".unsafe_cstr_ptr(),
             flags=flags,
             n_children=0,
-            children=UnsafePointer[UnsafePointer[CArrowSchema]](),
-            dictionary=UnsafePointer[CArrowSchema](),
+            children=LegacyUnsafePointer[LegacyUnsafePointer[CArrowSchema]](),
+            dictionary=LegacyUnsafePointer[CArrowSchema](),
             # TODO(kszucs): currently there is no way to pass a mojo callback to C
-            release=UnsafePointer[CSchemaReleaseFunction](),
-            private_data=UnsafePointer[NoneType](),
+            release=LegacyUnsafePointer[CSchemaReleaseFunction](),
+            private_data=LegacyUnsafePointer[NoneType](),
         )
 
     fn to_dtype(self) raises -> DataType:
-        var fmt = StringSlice[origin_of(self.format)](
-            unsafe_from_utf8_ptr=self.format
-        )
+        var fmt = StringSlice(unsafe_from_utf8_ptr=UnsafePointer(self.format))
         # TODO(kszucs): not the nicest, but dictionary literals are not supported yet
         if fmt == "n":
             return materialize[null]()
@@ -180,7 +182,7 @@ struct CArrowSchema(Copyable, Movable, Representable, Stringable, Writable):
             raise Error("Unknown format: " + fmt)
 
     fn to_field(self) raises -> Field:
-        var name = StringSlice[origin_of(self)](unsafe_from_utf8_ptr=self.name)
+        var name = StringSlice(unsafe_from_utf8_ptr=UnsafePointer(self.name))
         var dtype = self.to_dtype()
         var nullable = self.flags & ARROW_FLAG_NULLABLE
         return Field(String(name), dtype^, nullable != 0)
@@ -197,10 +199,12 @@ struct CArrowSchema(Copyable, Movable, Representable, Stringable, Writable):
         """
         writer.write("CArrowSchema(")
         writer.write('name="')
-        writer.write(StringSlice(unsafe_from_utf8_ptr=self.name))
+        writer.write(StringSlice(unsafe_from_utf8_ptr=UnsafePointer(self.name)))
         writer.write('", ')
         writer.write('format="')
-        writer.write(StringSlice(unsafe_from_utf8_ptr=self.format))
+        writer.write(
+            StringSlice(unsafe_from_utf8_ptr=UnsafePointer(self.format))
+        )
         writer.write('", ')
         if self.metadata:
             writer.write('metadata="')
@@ -224,15 +228,15 @@ struct CArrowArray(Copyable, Movable):
     var offset: Int64
     var n_buffers: Int64
     var n_children: Int64
-    var buffers: UnsafePointer[UnsafePointer[NoneType]]
-    var children: UnsafePointer[UnsafePointer[CArrowArray]]
-    var dictionary: UnsafePointer[CArrowArray]
-    var release: UnsafePointer[CArrayReleaseFunction]
-    var private_data: UnsafePointer[NoneType]
+    var buffers: LegacyUnsafePointer[LegacyUnsafePointer[NoneType]]
+    var children: LegacyUnsafePointer[LegacyUnsafePointer[CArrowArray]]
+    var dictionary: LegacyUnsafePointer[CArrowArray]
+    var release: LegacyUnsafePointer[CArrayReleaseFunction]
+    var private_data: LegacyUnsafePointer[NoneType]
 
     @staticmethod
     fn from_pyarrow(pyobj: PythonObject) raises -> CArrowArray:
-        var ptr = UnsafePointer[CArrowArray].alloc(1)
+        var ptr = LegacyUnsafePointer[CArrowArray].alloc(1)
         pyobj._export_to_c(Int(ptr))
         return ptr.take_pointee()
 
@@ -299,7 +303,7 @@ struct CArrowArray(Copyable, Movable):
 #
 # An alternative could be to define `get_schema` and friends as methods on the struct and self would have the right type.
 # It is not clear if the resulting ABI would be guaranteed to be compatible with C.
-alias AnyFunction = fn (OpaquePointer) -> UInt
+comptime AnyFunction = fn (LegacyUnsafePointer[NoneType]) -> UInt
 
 
 @fieldwise_init
@@ -314,37 +318,47 @@ struct CArrowArrayStreamOpaque(Copyable, Movable):
     var release: AnyFunction
 
     # Opaque producer-specific data
-    var private_data: OpaquePointer
+    var private_data: LegacyUnsafePointer[NoneType]
+
+
+comptime get_schema_fn = fn (
+    stream: LegacyUnsafePointer[CArrowArrayStreamOpaque],
+    out_schema: LegacyUnsafePointer[CArrowSchema],
+) -> UInt
+
+comptime get_next_fn = fn (
+    stream: LegacyUnsafePointer[CArrowArrayStreamOpaque],
+    out_array: LegacyUnsafePointer[CArrowArray],
+) -> UInt
 
 
 @fieldwise_init
 @register_passable("trivial")
 struct CArrowArrayStream(Copyable, Movable):
     # Callbacks providing stream functionality
-    var get_schema: fn (
-        stream: UnsafePointer[CArrowArrayStreamOpaque],
-        out_schema: UnsafePointer[CArrowSchema],
-    ) -> UInt
+    var get_schema: get_schema_fn
     var get_next: fn (
-        stream: UnsafePointer[CArrowArrayStreamOpaque],
-        out_array: UnsafePointer[CArrowArray],
+        stream: LegacyUnsafePointer[CArrowArrayStreamOpaque],
+        out_array: LegacyUnsafePointer[CArrowArray],
     ) -> UInt
     var get_last_error: fn (
-        stream: UnsafePointer[CArrowArrayStreamOpaque]
-    ) -> UnsafePointer[c_char]
+        stream: LegacyUnsafePointer[CArrowArrayStreamOpaque]
+    ) -> LegacyUnsafePointer[c_char]
 
     # Release callback
-    var release: fn (stream: UnsafePointer[CArrowArrayStreamOpaque]) -> None
+    var release: fn (
+        stream: LegacyUnsafePointer[CArrowArrayStreamOpaque]
+    ) -> None
 
     # Opaque producer-specific data
-    var private_data: OpaquePointer
+    var private_data: LegacyUnsafePointer[NoneType]
 
 
 @fieldwise_init
 struct ArrowArrayStream(Copyable, Movable):
     """Provide an fiendly interface to the C Arrow Array Stream."""
 
-    var c_arrow_array_stream: UnsafePointer[CArrowArrayStream]
+    var c_arrow_array_stream: LegacyUnsafePointer[CArrowArrayStreamOpaque]
 
     @staticmethod
     fn from_pyarrow(
@@ -358,18 +372,16 @@ struct ArrowArrayStream(Copyable, Movable):
         if not ptr:
             raise Error("Failed to get the arrow array stream pointer")
 
-        var alt = ptr.bitcast[CArrowArrayStream]()
+        var alt = LegacyUnsafePointer(ptr.bitcast[CArrowArrayStreamOpaque]())
         return ArrowArrayStream(alt)
-
-    fn _opaque_array_stream(self) -> UnsafePointer[CArrowArrayStreamOpaque]:
-        """Return the arrow array as its opaque C variant."""
-        return self.c_arrow_array_stream.bitcast[CArrowArrayStreamOpaque]()
 
     fn c_schema(self) raises -> CArrowSchema:
         """Return the C variant of the Arrow Schema."""
-        var schema = UnsafePointer[CArrowSchema].alloc(1)
-        var function = self.c_arrow_array_stream[].get_schema
-        var err = function(self._opaque_array_stream(), schema)
+        var schema = LegacyUnsafePointer[CArrowSchema].alloc(1)
+        var function = LegacyUnsafePointer(
+            to=self.c_arrow_array_stream[].get_schema
+        ).bitcast[get_schema_fn]()[]
+        var err = function(self.c_arrow_array_stream, schema)
         if err != 0:
             raise Error("Failed to get schema " + String(err))
         if not schema:
@@ -378,9 +390,11 @@ struct ArrowArrayStream(Copyable, Movable):
 
     fn c_next(self) raises -> CArrowArray:
         """Return the next buffer in the streeam."""
-        var arrow_array = UnsafePointer[CArrowArray].alloc(1)
-        var function = self.c_arrow_array_stream[].get_next
-        var err = function(self._opaque_array_stream(), arrow_array)
+        var arrow_array = LegacyUnsafePointer[CArrowArray].alloc(1)
+        var function = LegacyUnsafePointer(
+            to=self.c_arrow_array_stream[].get_next
+        ).bitcast[get_next_fn]()[]
+        var err = function(self.c_arrow_array_stream, arrow_array)
         if err != 0:
             raise Error("Failed to get next arrow array " + String(err))
         if not arrow_array:
